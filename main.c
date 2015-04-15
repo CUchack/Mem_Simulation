@@ -70,9 +70,10 @@ int verbosity;
 // printUsage - Print usage info
 void printUsage( char *argv[] )
 {
-   printf( "Usage: %s [-f <file>]\n", argv[0] );
+   printf( "Usage: %s [-f <file>] [-h]\n", argv[0] );
    printf( "Options:\n" );
    printf( "  -f <file>  Optional configuration file.\n" );
+   printf( "  -h         Print this help message.\n" );
    exit( 0 );
 }
 
@@ -85,7 +86,23 @@ void printSummary( int hit_count, int miss_count, int eviction_count )
 
 int main(int argc, char **argv)
 {
-    printf("Hello world!\n");
-    printUsage(argv);
+    char *config_file;
+    char c;
+    while ( ( c = getopt( argc, argv, "f:h" ) ) != -1 )
+        {
+            switch ( c )
+            {
+            case 'f':
+                config_file = optarg;
+                printf("config file = %s\n", config_file);
+                break;
+            case 'h':
+                printUsage(argv);
+                exit(1);
+                break;
+            }
+        }
+
+//    printUsage(argv);
     return 0;
 }
