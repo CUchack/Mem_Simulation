@@ -13,14 +13,14 @@ typedef unsigned long long int mem_addr_t;
 
 
 // a struct that groups cache parameters together
-typedef struct
-{
-   int s;                       /* 2**s cache sets */
-   int b;                       /* cacheline block size 2**b bytes */
-   int E;                       /* number of cachelines per set */
-   int S;                       /* number of sets, derived from S = 2**s */
-   int B;                       /* cacheline block size (bytes), derived from B = 2**b */
-} cache_param_t;
+//typedef struct
+//{
+//   int s;                       /* 2**s cache sets */
+//   int b;                       /* cacheline block size 2**b bytes */
+//   int E;                       /* number of cachelines per set */
+//   int S;                       /* number of sets, derived from S = 2**s */
+//   int B;                       /* cacheline block size (bytes), derived from B = 2**b */
+//} cache_param_t;
 
 // A struct that defines the L1 cache parameters
 typedef struct
@@ -61,6 +61,13 @@ typedef struct
     main_mem mmem;
 }mem_params;
 
+//Struct that will hold the tracefile parameters
+typedef struct
+{
+    char refType;
+    mem_addr_t address;
+    int numBytes;
+}traceData;
 
 /**********************************************************************
 Simulate function.
