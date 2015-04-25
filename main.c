@@ -6,7 +6,7 @@ const mem_params Default_params = {.L1.block_size = 32, .L1.cache_size = 8192, .
 .L1.hit_time = 1, .L1.miss_time = 1, .L2.block_size = 64, .L2.cache_size = 32768,
 .L2.assoc = 1, .L2.hit_time = 5, .L2.miss_time = 7, .L2.transfer_time = 5,
 .L2.bus_width = 16, .mmem.sendAddr = 10, .mmem.ready = 30, .mmem.chunkTime = 15,
-.mmem.chunkSize = 8};
+.mmem.chunkSize = 8,.setName = "Default"};
 
 
 mem_params Parameters;
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 //        int L1_Cache,L2_cache;
 //        unsigned short L1_assoc, L2_assoc;
         FILE *configfile = fopen(config_file, "r");
-        while (fscanf( configfile, "%d %hu %d %hu", &Parameters.L1.cache_size, &Parameters.L1.assoc, &Parameters.L2.cache_size, &Parameters.L2.assoc) == 4)
+        while (fscanf( configfile, "%s %d %hu %d %hu", &Parameters.setName, &Parameters.L1.cache_size, &Parameters.L1.assoc, &Parameters.L2.cache_size, &Parameters.L2.assoc) == 5)
             {
                 simulate(Parameters);
             }

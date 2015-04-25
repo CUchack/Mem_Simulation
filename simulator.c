@@ -4,6 +4,7 @@
 void simulate (mem_params params){
     rewind(stdin);
 
+    printf("Set name: %s\n", &params.setName);
     printf("L1 Parameters:\nCache size: %d \nAssociativity: %hu\n", params.L1.cache_size,params.L1.assoc);
     printf("L2 Parameters:\nCache size: %d \nAssociativity: %hu\n", params.L2.cache_size,params.L2.assoc);
     mem_addr_t address;
@@ -12,6 +13,15 @@ void simulate (mem_params params){
     char op;
 
            /* TODO: Initialize a cache */
+    unsigned int numRowsL1 = params.L1.cache_size/(params.L1.assoc* params.L1.block_size);
+    unsigned int numOffsetL1 = floor(log2(params.L1.block_size))+1;
+    unsigned int numIndexL1 = floor(log2(numRowsL1))+1;
+    unsigned int numRowsL2 = params.L2.cache_size/(params.L2.assoc* params.L2.block_size);
+    unsigned int numOffsetL2 = floor(log2(params.L2.block_size))+1;
+    unsigned int numIndexL2 = floor(log2(numRowsL2))+1;
+
+
+    unsigned int addrSize, tag, offset, numTag;
 
    //Structure for a block
    typedef struct
@@ -43,6 +53,10 @@ void simulate (mem_params params){
 //   }
         while (scanf("%c %Lx %d\n",&op,&address,&bytesize) == 3) {
                 printf("Reference type: %c\nAddress: %Lx\nNumber of Bytes: %d\n", op, address, bytesize);
+                addrSize = sizeof(address)*CHAR_BIT/4;                      //Find the number of digits used in the address
+                numTag = addrSize-numIndexL1-numOffsetL1;                   //find the number of bits used to represent a tag
+
+
         }
 
 }

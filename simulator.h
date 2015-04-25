@@ -7,6 +7,7 @@
 #include <strings.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <math.h>
 
 // Always use a 64-bit variable to hold memory addresses
 typedef unsigned long long int mem_addr_t;
@@ -59,6 +60,7 @@ typedef struct
     L1_params L1;
     L2_params L2;
     main_mem mmem;
+    char setName[15];
 }mem_params;
 
 //Struct that will hold the tracefile parameters
