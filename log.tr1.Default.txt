@@ -6,6 +6,7 @@ L2 Parameters:
 Cache size: 32768 
 Associativity: 1
 Number of L1 offset bits: 5
+45*2
 number of L1 rows: 256
 Number of L2 offset bits: 6
 number of L2 rows: 512
