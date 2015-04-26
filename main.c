@@ -3,7 +3,7 @@
 
 //Initialize structure that holds default memory parameters
 const mem_params Default_params = {.L1.block_size = 32, .L1.cache_size = 8192, .L1.assoc = 1,
-.L1.hit_time = 1, .L1.miss_time = 1, .L2.block_size = 64, .L2.cache_size = 32768,
+.L1.hit_time = 1, .L1.miss_time = 1, .L1.bus_width = 4, .L2.block_size = 64, .L2.cache_size = 32768,
 .L2.assoc = 1, .L2.hit_time = 5, .L2.miss_time = 7, .L2.transfer_time = 5,
 .L2.bus_width = 16, .mmem.sendAddr = 10, .mmem.ready = 30, .mmem.chunkTime = 15,
 .mmem.chunkSize = 8,.setName = "Default"};
@@ -16,10 +16,11 @@ int verbosity;
 // printUsage - Print usage info
 void printUsage( char *argv[] )
 {
-   printf( "Usage: %s [-f <file>] [-h]\n", argv[0] );
+   printf( "Usage: %s [-f <file>] [-h] -t <file> \n", argv[0] );
    printf( "Options:\n" );
    printf( "  -f <file>  Optional configuration file.\n" );
    printf( "  -h         Print this help message.\n" );
+   printf( "  -t <file>  Trace file piped into program\n");
    exit( 0 );
 }
 
@@ -29,13 +30,20 @@ void printSummary( int hit_count, int miss_count, int eviction_count )
 }
 
 
+char *config_file;          //Configuration file name
+char *trace_file;           //Trace file name
+
+
 int main(int argc, char **argv)
 {
-    char *config_file;
     char c;
-    bool config = false;
+    bool config = false, trace = false;
     Parameters = Default_params;
-    while ( ( c = getopt( argc, argv, "f:h" ) ) != -1 )
+    if (argc < 1){
+        printUsage(argv);
+        exit(1);
+    }
+    while ( ( c = getopt( argc, argv, "f:t:h" ) ) != -1 )
         {
             switch ( c )
             {
@@ -48,8 +56,17 @@ int main(int argc, char **argv)
                 printUsage(argv);
                 exit(1);
                 break;
+            case 't':
+                trace_file = optarg;
+                printf("Trace file = %s\n", trace_file);
+                trace = true;
+                break;
             }
         }
+    if (!trace){
+        printUsage(argv);
+        exit(1);
+    }
     if (!config){
         Parameters = Default_params;
         printf("Parameters set to default\n");
@@ -63,6 +80,7 @@ int main(int argc, char **argv)
             {
                 simulate(Parameters);
             }
+        fclose(configfile);
     }
 
 //    printUsage(argv);
