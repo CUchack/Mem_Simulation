@@ -1,0 +1,18 @@
+---------------------------------------------------------
+      tr1.Default     Simulation Results
+---------------------------------------------------------
+
+Memory System:
+  L1 Dcache size = 8192 : ways = 1 : block size = 32
+  L1 Icache size = 8192 : ways = 1 : block size = 32
+  L2 Cache size = 32768 : ways = 1 : block size = 64
+  Memory ready time  = 30 : chunksize = 8 : chunktime = 15
+
+Execute time =    0;    Total refs = 10
+Flush time =      0
+Instruction references = 6;    Data references = 4
+
+Number of reference types:     [Percentage]
+  Reads =             0     [0.000000]
+  Writes =             4     [40.000000]
+  Inst. =             6     [60.000000]

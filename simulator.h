@@ -127,7 +127,7 @@ typedef struct
 Simulate function.
 ***********************************************************************/
 void simulate(mem_params params);
-void checkCache(mem_params params);
+void checkCache(mem_params params, traceData trace);
 
 void init_sim(mem_params *params);
 

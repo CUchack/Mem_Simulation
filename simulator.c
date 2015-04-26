@@ -137,17 +137,9 @@ void simulate (mem_params params){
         L2_tag = Trace.address >> (numOffsetL2 + numIndexL2);
         fprintf(logfile, "extracted L1 tag: %llx\n", L1_tag);
         fprintf(logfile, "extracted L2 tag: %llx\n", L2_tag);
-        switch (Trace.refType){
-        case 'I':
-            vals.instruction_references++;
-            break;
-        case 'R':
-            vals.number_reads++;
-            break;
-        case 'W':
-            vals.number_writes++;
-            break;
-        }
+        checkCache(params, Trace);
+
+
 
     }
     fclose(logfile);
@@ -159,8 +151,20 @@ This function checks the cache levels for a hit, if it's not there it checks
 the next level until it gets to main memory.  It also tracks the statistics
 for the main result printout
 ***************************************************************************/
-void checkCache(mem_params params){
+void checkCache(mem_params params, traceData trace){
     //
+        switch (trace.refType){
+        case 'I':
+            vals.instruction_references++;
+
+            break;
+        case 'R':
+            vals.number_reads++;
+            break;
+        case 'W':
+            vals.number_writes++;
+            break;
+        }
 
 }
 

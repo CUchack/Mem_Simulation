@@ -15,6 +15,7 @@
 				<Compiler>
 					<Add option="-ansi -std=gnu99" />
 					<Add option="-g" />
+					<Add option="-ansi -std=gnu99" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -36,6 +37,10 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="simulator.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="simulator.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
