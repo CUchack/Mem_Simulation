@@ -110,18 +110,19 @@ void simulate (mem_params params){
 
 
    //allocate space for sets and for lines
-   cache_t L1_D,L1_I, L2;
 
-   L1_D.sets = malloc( params.L1.assoc * sizeof(cache_set));
-   L1_I.sets = malloc( params.L1.assoc * sizeof(cache_set));
-   L2.sets = malloc( params.L2.assoc * sizeof(cache_set));
+   cache_sys cache;
+
+   cache.L1_D.sets = malloc( params.L1.assoc * sizeof(cache_set));
+   cache.L1_I.sets = malloc( params.L1.assoc * sizeof(cache_set));
+   cache.L2.sets = malloc( params.L2.assoc * sizeof(cache_set));
 
 
    for ( int i = 0; i < params.L1.assoc; i++ )
    {
-      L1_D.sets[i].numRows = malloc( sizeof ( block_st ) * numRowsL1 );
-      L1_I.sets[i].numRows = malloc( sizeof ( block_st ) * numRowsL1 );
-      L2.sets[i].numRows = malloc( sizeof ( block_st ) * numRowsL2 );
+      cache.L1_D.sets[i].numRows = malloc( sizeof ( block_st ) * numRowsL1 );
+      cache.L1_I.sets[i].numRows = malloc( sizeof ( block_st ) * numRowsL1 );
+      cache.L2.sets[i].numRows = malloc( sizeof ( block_st ) * numRowsL2 );
    }
 
     while (scanf("%c %llx %d\n",&Trace.refType,&Trace.address,&Trace.numBytes) == 3)
@@ -142,7 +143,7 @@ void simulate (mem_params params){
         Trace.L2_tag = Trace.address >> (numOffsetL2 + numIndexL2);
         fprintf(logfile, "extracted L1 tag: %llx\n", Trace.L1_tag);
         fprintf(logfile, "extracted L2 tag: %llx\n", Trace.L2_tag);
-        checkCache(params, Trace);
+        checkCache(&cache, params, Trace);
 
 
 
@@ -156,11 +157,10 @@ This function checks the cache levels for a hit, if it's not there it checks
 the next level until it gets to main memory.  It also tracks the statistics
 for the main result printout
 ***************************************************************************/
-void checkCache(mem_params params, traceData trace){
+void checkCache(cache_sys *cache, mem_params params, traceData trace){
     //
         switch (trace.refType){
         case 'I':
-            vals.instruction_references++;
 
             break;
         case 'R':
@@ -173,6 +173,31 @@ void checkCache(mem_params params, traceData trace){
 
 }
 
+void readCache(cache_t *cache, mem_params params, traceData trace) {
+    vals.instruction_references++;
+        if (cache.L1_I.sets[L1_Dtrace.L1_index].valid) {
+            if (params.L1.assoc == 1) {
+                if (cache.L1_D.sets[L1_Dtrace.L1_index].numRows[1].tag == trace.L1_tag) {
+                        // cache hit
+                }
+                else {
+                    if (cache.L1_D.sets[L1_Dtrace.L1_index].numRows[1].dirty) {
+                        //write tag back
+                    }
+                }
+            }
+            else {
+
+            }
+        }
+        else {
+            // Cache Miss
+        }
+}
+
+void writeCache(cache_t *cache, mem_params params, traceData trace) {
+
+}
 
 
 /**************************************************************************

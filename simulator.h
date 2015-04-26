@@ -84,15 +84,14 @@ typedef struct
 //Structure for a block
 typedef struct
 {
-    int valid;
+    int dirty;
     mem_addr_t tag;
-    mem_addr_t offset;
-    mem_addr_t index;
     int timestamp;
 } block_st;
 //Structure for a cache set; a pointer to an array of blocks
 typedef struct
 {
+    int valid;
     block_st *numRows;
 }cache_set;
 
@@ -102,6 +101,12 @@ typedef struct
     cache_set *sets;
 } cache_t;
 
+typedef struct
+{
+    cache_t L1_I;
+    cache_t L1_D;
+    cache_t L2;
+} cache_sys;
 
 //Structure that keeps track of the statistical variables for the simulation run
 typedef struct
@@ -134,7 +139,9 @@ typedef struct
 Simulate function.
 ***********************************************************************/
 void simulate(mem_params params);
-void checkCache(mem_params params, traceData trace);
+void checkCache(cache_sys *caches, mem_params params, traceData trace);
+void readCache(cache_t *cache, mem_params params, traceData trace);
+void writeCache(cache_t *cache, mem_params params, traceData trace);
 
 void init_sim(mem_params *params);
 
