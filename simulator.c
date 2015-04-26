@@ -81,19 +81,19 @@ void simulate (mem_params params){
 //    char op;
     traceData Trace;
     unsigned int tagSize_L1, tagSize_L2;//addrSize, tag, offset,
-    unsigned int L1_index, L2_index;
-    mem_addr_t L1_tag, L2_tag;
+//    unsigned int L1_index, L2_index, L1_offset, L2_offset;
+//    mem_addr_t L1_tag, L2_tag;
 
     unsigned long long TIMESTAMP = 0;
 
            /* TODO: Initialize a cache */
     //calculate number of rows, index bits, and offset bits for each cache level
     unsigned int numRowsL1 = params.L1.cache_size/(params.L1.assoc* params.L1.block_size);
-    unsigned int numOffsetL1 = floor(log2(params.L1.block_size))+1;
-    unsigned int numIndexL1 = floor(log2(numRowsL1))+1;
+    unsigned int numOffsetL1 = floor(log2(params.L1.block_size));
+    unsigned int numIndexL1 = floor(log2(numRowsL1));
     unsigned int numRowsL2 = params.L2.cache_size/(params.L2.assoc* params.L2.block_size);
-    unsigned int numOffsetL2 = floor(log2(params.L2.block_size))+1;
-    unsigned int numIndexL2 = floor(log2(numRowsL2))+1;
+    unsigned int numOffsetL2 = floor(log2(params.L2.block_size));
+    unsigned int numIndexL2 = floor(log2(numRowsL2));
 
     fprintf(logfile, "Number of L1 offset bits: %d\n", numOffsetL1);
     fprintf(logfile, "number of L1 rows: %d\n", numRowsL1);
@@ -128,15 +128,20 @@ void simulate (mem_params params){
     {
         fprintf(logfile, "Reference type: %c\nAddress: %llx\nNumber of Bytes: %d\n", Trace.refType, Trace.address, Trace.numBytes);
         //calculate index values for caches
-        L1_index = ((Trace.address << (tagSize_L1 + 16)) >> (tagSize_L1 + 16 + numOffsetL1));
-        fprintf(logfile, "extracted L1 index: %x\n", L1_index);
-        L2_index = ((Trace.address << (tagSize_L2 + 16)) >> (tagSize_L2 + 16 + numOffsetL2));
-        fprintf(logfile, "extracted L2 index: %x\n", L2_index);
-        //calculate tag values for caches
-        L1_tag = Trace.address >> (numOffsetL1 + numIndexL1);
-        L2_tag = Trace.address >> (numOffsetL2 + numIndexL2);
-        fprintf(logfile, "extracted L1 tag: %llx\n", L1_tag);
-        fprintf(logfile, "extracted L2 tag: %llx\n", L2_tag);
+        Trace.L1_index = ((Trace.address << (tagSize_L1 + 16)) >> (tagSize_L1 + 16 + numOffsetL1));
+        fprintf(logfile, "extracted L1 index: %x\n", Trace.L1_index);
+        Trace.L2_index = ((Trace.address << (tagSize_L2 + 16)) >> (tagSize_L2 + 16 + numOffsetL2));
+        fprintf(logfile, "extracted L2 index: %x\n", Trace.L2_index);
+
+        Trace.L1_offset = ((Trace.address << (tagSize_L1 + 16 + numIndexL1)) >> (tagSize_L1 + 16 + numIndexL1));
+        fprintf(logfile, "L1 offset: %d \n", Trace.L1_offset);
+        Trace.L2_offset = ((Trace.address << (tagSize_L2 + 16 + numIndexL2)) >> (tagSize_L2 + 16 + numIndexL2));
+        fprintf(logfile, "L2 offset: %d \n", Trace.L2_offset);
+       //calculate tag values for caches
+        Trace.L1_tag = Trace.address >> (numOffsetL1 + numIndexL1);
+        Trace.L2_tag = Trace.address >> (numOffsetL2 + numIndexL2);
+        fprintf(logfile, "extracted L1 tag: %llx\n", Trace.L1_tag);
+        fprintf(logfile, "extracted L2 tag: %llx\n", Trace.L2_tag);
         checkCache(params, Trace);
 
 

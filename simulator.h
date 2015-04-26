@@ -72,6 +72,13 @@ typedef struct
     char refType;
     mem_addr_t address;
     int numBytes;
+    unsigned int L1_index;
+    unsigned int L2_index;
+    unsigned int L1_offset;
+    unsigned int L2_offset;
+    mem_addr_t L1_tag;
+    mem_addr_t L2_tag;
+
 }traceData;
 
 //Structure for a block
