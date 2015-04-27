@@ -1,17 +1,17 @@
-Set name: Default
+Set name: L1-small
 L1 Parameters:
-Cache size: 8192 
+Cache size: 4096 
 Associativity: 1
 L2 Parameters:
 Cache size: 32768 
 Associativity: 1
 Number of L1 offset bits: 5
-number of L1 rows: 256
+number of L1 rows: 128
 Number of L2 offset bits: 6
 number of L2 rows: 512
-Number of L1 tag bits: 35
+Number of L1 tag bits: 36
 Number of L2 tag bits: 33
-Number of L1 Index bits: 8
+Number of L1 Index bits: 7
 Number of L2 Index bits: 9
 Reference type: I
 Address: 7f81ce2206b0
@@ -20,7 +20,7 @@ extracted L1 index: 35
 extracted L2 index: 1a
 L1 offset: 16 
 L2 offset: 48 
-extracted L1 tag: 3fc0e7110
+extracted L1 tag: 7f81ce220
 extracted L2 tag: ff039c44
 Reference type: I
 Address: 7f81ce2206b3
@@ -29,7 +29,7 @@ extracted L1 index: 35
 extracted L2 index: 1a
 L1 offset: 19 
 L2 offset: 51 
-extracted L1 tag: 3fc0e7110
+extracted L1 tag: 7f81ce220
 extracted L2 tag: ff039c44
 Reference type: W
 Address: 7fff5a8487d8
@@ -38,7 +38,7 @@ extracted L1 index: 3e
 extracted L2 index: 1f
 L1 offset: 24 
 L2 offset: 24 
-extracted L1 tag: 3fffad424
+extracted L1 tag: 7fff5a848
 extracted L2 tag: fffeb509
 Reference type: I
 Address: 7f81ce224010
@@ -47,7 +47,7 @@ extracted L1 index: 0
 extracted L2 index: 100
 L1 offset: 16 
 L2 offset: 16 
-extracted L1 tag: 3fc0e7112
+extracted L1 tag: 7f81ce224
 extracted L2 tag: ff039c44
 Reference type: W
 Address: 7fff5a8487d0
@@ -56,7 +56,7 @@ extracted L1 index: 3e
 extracted L2 index: 1f
 L1 offset: 16 
 L2 offset: 16 
-extracted L1 tag: 3fffad424
+extracted L1 tag: 7fff5a848
 extracted L2 tag: fffeb509
 Reference type: I
 Address: 7f81ce224011
@@ -65,7 +65,7 @@ extracted L1 index: 0
 extracted L2 index: 100
 L1 offset: 17 
 L2 offset: 17 
-extracted L1 tag: 3fc0e7112
+extracted L1 tag: 7f81ce224
 extracted L2 tag: ff039c44
 Reference type: I
 Address: 7f81ce224014
@@ -74,7 +74,7 @@ extracted L1 index: 0
 extracted L2 index: 100
 L1 offset: 20 
 L2 offset: 20 
-extracted L1 tag: 3fc0e7112
+extracted L1 tag: 7f81ce224
 extracted L2 tag: ff039c44
 Reference type: W
 Address: 7fff5a8487c8
@@ -83,7 +83,7 @@ extracted L1 index: 3e
 extracted L2 index: 1f
 L1 offset: 8 
 L2 offset: 8 
-extracted L1 tag: 3fffad424
+extracted L1 tag: 7fff5a848
 extracted L2 tag: fffeb509
 Reference type: I
 Address: 7f81ce224016
@@ -92,7 +92,7 @@ extracted L1 index: 0
 extracted L2 index: 100
 L1 offset: 22 
 L2 offset: 22 
-extracted L1 tag: 3fc0e7112
+extracted L1 tag: 7f81ce224
 extracted L2 tag: ff039c44
 Reference type: W
 Address: 7fff5a8487c0
@@ -101,5 +101,5 @@ extracted L1 index: 3e
 extracted L2 index: 1f
 L1 offset: 0 
 L2 offset: 0 
-extracted L1 tag: 3fffad424
+extracted L1 tag: 7fff5a848
 extracted L2 tag: fffeb509

@@ -1,11 +1,11 @@
 ---------------------------------------------------------
-      tr1.Default     Simulation Results
+      tr1.All-2way     Simulation Results
 ---------------------------------------------------------
 
 Memory System:
-  L1 Dcache size = 8192 : ways = 1 : block size = 32
-  L1 Icache size = 8192 : ways = 1 : block size = 32
-  L2 Cache size = 32768 : ways = 1 : block size = 64
+  L1 Dcache size = 8192 : ways = 2 : block size = 32
+  L1 Icache size = 8192 : ways = 2 : block size = 32
+  L2 Cache size = 32768 : ways = 2 : block size = 64
   Memory ready time  = 30 : chunksize = 8 : chunktime = 15
 
 Execute time =    600;    Total refs = 10
@@ -53,4 +53,4 @@ Memory Level:      L2
   Flush Kickouts  =   2
 
 L1 cache cost (Icache $200) + (Dcache $200) = $400
-L2 cache cost = $25
+L2 cache cost = $125
