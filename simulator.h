@@ -34,6 +34,10 @@ typedef struct
     unsigned short hit_time;
     unsigned short miss_time;
     unsigned short bus_width;
+    unsigned int numRowsL1;
+    unsigned int numOffsetL1;
+    unsigned int numIndexL1;
+
 } L1_params;
 
 //A struct that defines the L2 cache parameters
@@ -46,6 +50,9 @@ typedef struct
     unsigned short miss_time;
     unsigned short transfer_time;
     unsigned short bus_width;
+    unsigned int numRowsL2;
+    unsigned int numOffsetL2;
+    unsigned int numIndexL2;
 }L2_params;
 
 //A struct to define main memory parameters
@@ -112,28 +119,35 @@ typedef struct
 //Structure that keeps track of the statistical variables for the simulation run
 typedef struct
 {
-	int total_hit;
-	int L1i_hit;
-	int L1d_hit;
-	int L2_hit;
-	int total_miss;
-	int L1i_miss;
-	int L1d_miss;
-	int L2_miss;
-	int total_kickouts;
-	int L1i_kickouts;
-	int L1d_kickouts;
-	int L2_kickouts;
-	int total_dirty_kickouts;
-	int L1i_dirty_kickouts;
-	int L1d_dirty_kickouts;
-	int L2_dirty_kickouts;
-	int transfers;
+	long total_hit;
+	long flushes;
+	long L1i_hit;
+	long L1d_hit;
+	long L2_hit;
+	long total_miss;
+	long L1i_miss;
+	long L1d_miss;
+	long L2_miss;
+	long total_kickouts;
+	long L1i_kickouts;
+	long L1d_kickouts;
+	long L2_kickouts;
+	long total_dirty_kickouts;
+	long L1i_dirty_kickouts;
+	long L1d_dirty_kickouts;
+	long L2_dirty_kickouts;
+	long L1i_transfers;
+	long L1d_transfers;
+	long L2_transfers;
     long long exec_time;
     long instruction_references;
     long number_reads;
     long number_writes;
     long flush_time;
+    long long read_cycles;
+    long long write_cycles;
+    long long instruction_cycles;
+    long num_
 } cacheVals;
 
 /**********************************************************************
