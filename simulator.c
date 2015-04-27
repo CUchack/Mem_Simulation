@@ -179,89 +179,87 @@ void checkCache(cache_sys *caches, mem_params params, traceData trace) {
 }
 
 void readCache(cache_t *l1, cache_t *l2, traceData trace) {
-   if (l1->row[trace.L1_index].valid) { // cache valid
-      for (int i = 0; i < l1->assoc; i++) {
-         if (l1->row[trace.L1_index].col[i].tag == trace.L1_tag) {
-            // l1 cache hit
-            return;
-         }
+   // seach l1 for tag
+   for (int i = 0; i < l1->assoc; i++) {
+      if ((l1->row[trace.L1_index].col[i].tag == trace.L1_tag) && (l1->row[trace.L1_index].col[i].valid)) {
+         // l1 cache hit
+         lruUpdate(l1,trace.L1_index,i);
+         return;
       }
-      // l1 cache miss, check l2
-      for (int i = 0; i < l2->assoc; i++) {
-         if (l2->row[trace.L2_index].col[i].tag == trace.L2_tag) {
-            // l2 cache hit, find block in l1 to evict
-            int lruIdx = lru(l1,trace.L1_index);
-            if (l1->row[trace.L1_index].col[lruIdx].dirty) {
-               // block dirty, write tag back
-               l2->row[trace.L2_index].col[i].dirty = false;
-            }
-            // write to l1 cache
-            l1->row[trace.L1_index].col[lruIdx].tag = trace.L1_tag;
-            l1->row[trace.L1_index].col[lruIdx].dirty = false;
-            return;
+   }
+   // l1 cache miss, check l2
+   for (int i = 0; i < l2->assoc; i++) {
+      // search l2 for tag
+      if ((l2->row[trace.L2_index].col[i].tag == trace.L2_tag) && (l2->row[trace.L2_index].col[i].valid)) {
+         // l2 cache hit, find block in l1 to evict
+         lruUpdate(l2,trace.L2_index,i);
+         if (l1->row[trace.L1_index].col[0].dirty) {
+            // block dirty, write tag back
+            l2->row[trace.L2_index].col[i].dirty = false;
          }
+         // write to l1 cache
+         l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
+         l1->row[trace.L1_index].col[0].dirty = false;
+         lruUpdate(l1,trace.L1_index,0);
+         return;
       }
-      // l2 cache miss
-      int lruIdxl1 = lru(l1,trace.L1_index);
-      int lruIdxl2 = lru(l2,trace.L2_index);
-      l1->row[trace.L1_index].col[lruIdxl1].tag = trace.L1_tag;
-      l2->row[trace.L2_index].col[lruIdxl2].tag = trace.L2_tag;
-      l1->row[trace.L1_index].col[lruIdxl1].dirty = false;
-      l2->row[trace.L2_index].col[lruIdxl2].dirty = false;
-      return;
    }
-   else {
-      // l1 not valid write tag to both caches and set not dirty
-      l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
-      l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
-      l1->row[trace.L1_index].col[0].dirty = false;
-      l2->row[trace.L2_index].col[0].dirty = false;
-   }
+   // l2 cache miss or l1 does not contain any valid blocks
+   l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
+   l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
+   l1->row[trace.L1_index].col[0].dirty = false;
+   l2->row[trace.L2_index].col[0].dirty = false;
+   lruUpdate(l1,trace.L1_index,0);
+   lruUpdate(l2,trace.L2_index,0);
+   return;
 }
 
 void writeCache(cache_t *l1, cache_t *l2, traceData trace) {
-   if (l1->row[trace.L1_index].valid) { // cache valid
-      for (int i = 0; i < l1->assoc; i++) {
-         if (l1->row[trace.L1_index].col[i].tag == trace.L1_tag) {
-            // l1 cache hit
-            return;
-         }
+   // seach l1 for tag
+   for (int i = 0; i < l1->assoc; i++) {
+      if ((l1->row[trace.L1_index].col[i].tag == trace.L1_tag) && (l1->row[trace.L1_index].col[i].valid)) {
+         // l1 cache hit
+         lruUpdate(l1,trace.L1_index,i);
+         return;
       }
-      // l1 cache miss, check l2
-      for (int i = 0; i < l2->assoc; i++) {
-         if (l2->row[trace.L2_index].col[i].tag == trace.L2_tag) {
-            // l2 cache hit, find block in l1 to evict
-            int lruIdx = lru(l1,trace.L1_index);
-            if (l1->row[trace.L1_index].col[lruIdx].dirty) {
-               // block dirty, write tag back
-               l2->row[trace.L2_index].col[i].dirty = false;
-            }
-            // write to l1 cache
-            l1->row[trace.L1_index].col[lruIdx].tag = trace.L1_tag;
-            l1->row[trace.L1_index].col[lruIdx].dirty = true;
-            return;
+   }
+   // l1 cache miss, check l2
+   for (int i = 0; i < l2->assoc; i++) {
+      // search l2 for tag
+      if ((l2->row[trace.L2_index].col[i].tag == trace.L2_tag) && (l2->row[trace.L2_index].col[i].valid)) {
+         // l2 cache hit, find block in l1 to evict
+         lruUpdate(l2,trace.L2_index,i);
+         if (l1->row[trace.L1_index].col[0].dirty) {
+            // block dirty, write tag back
+            l2->row[trace.L2_index].col[i].dirty = false;
          }
+         // write to l1 cache
+         l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
+         l1->row[trace.L1_index].col[0].dirty = true;
+         lruUpdate(l1,trace.L1_index,0);
+         return;
       }
-      // l2 cache miss
-      int lruIdxl1 = lru(l1,trace.L1_index);
-      int lruIdxl2 = lru(l2,trace.L2_index);
-      l1->row[trace.L1_index].col[lruIdxl1].tag = trace.L1_tag;
-      l2->row[trace.L2_index].col[lruIdxl2].tag = trace.L2_tag;
-      l1->row[trace.L1_index].col[lruIdxl1].dirty = true;
-      l2->row[trace.L2_index].col[lruIdxl2].dirty = false;
-      return;
    }
-   else {
-      // l1 not valid write tag to both caches and set not dirty
-      l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
-      l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
-      l1->row[trace.L1_index].col[0].dirty = true;
-      l2->row[trace.L2_index].col[0].dirty = false;
-   }
+   // l2 cache miss or l1 does not contain any valid blocks
+   l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
+   l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
+   l1->row[trace.L1_index].col[0].dirty = false;
+   l2->row[trace.L2_index].col[0].dirty = false;
+   lruUpdate(l1,trace.L1_index,0);
+   lruUpdate(l2,trace.L2_index,0);
+   return;
 }
 
-int lru(cache_t *cache, unsigned int index) {
-return 0;
+// put recently used block_st at end. LRU  block_st is at beginning
+void lruUpdate(cache_t *cache, unsigned int index, unsigned int col) {
+   if (col == cache->assoc-1) {
+      return;
+   }
+   block_st curr = cache->row[index].col[col];
+   for (int i = col; col < cache->assoc-1; i++) {
+      cache->row[index].col[i] = cache->row[index].col[i+1];
+   }
+   cache->row[index].col[cache->assoc-1] = curr;
 }
 
 

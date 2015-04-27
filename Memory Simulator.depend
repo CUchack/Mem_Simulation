@@ -18,7 +18,7 @@
 1430089266 source:/home/andrew/prj2/main.c
 	"simulator.h"
 
-1430120559 /home/andrew/prj2/simulator.h
+1430125508 /home/andrew/prj2/simulator.h
 	<stdlib.h>
 	<stdio.h>
 	<getopt.h>
@@ -27,4 +27,7 @@
 	<stdbool.h>
 	<math.h>
 	<string.h>
+
+1430126173 source:/home/andrew/prj2/simulator.c
+	"simulator.h"
 
