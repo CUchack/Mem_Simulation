@@ -180,53 +180,88 @@ void checkCache(cache_sys *caches, mem_params params, traceData trace) {
 
 void readCache(cache_t *l1, cache_t *l2, traceData trace) {
    if (l1->row[trace.L1_index].valid) { // cache valid
-      if (l1->assoc == 1) { // direct mapped cache
-         if (l1->row[trace.L1_index].col[0].tag == trace.L1_tag) { // cache hit
+      for (int i = 0; i < l1->assoc; i++) {
+         if (l1->row[trace.L1_index].col[i].tag == trace.L1_tag) {
+            // l1 cache hit
             return;
          }
-         else { // cache miss
-            if (l1->row[trace.L1_index].col[0].dirty) { // block dirty
-               //write tag back
+      }
+      // l1 cache miss, check l2
+      for (int i = 0; i < l2->assoc; i++) {
+         if (l2->row[trace.L2_index].col[i].tag == trace.L2_tag) {
+            // l2 cache hit, find block in l1 to evict
+            int lruIdx = lru(l1,trace.L1_index);
+            if (l1->row[trace.L1_index].col[lruIdx].dirty) {
+               // block dirty, write tag back
+               l2->row[trace.L2_index].col[i].dirty = false;
             }
-            //read block from lower memory
-            l1->row[trace.L1_index].col[0].dirty = false;
+            // write to l1 cache
+            l1->row[trace.L1_index].col[lruIdx].tag = trace.L1_tag;
+            l1->row[trace.L1_index].col[lruIdx].dirty = false;
+            return;
          }
       }
-      else { // associative cache
-         for(int i = 0; i < l1->assoc; i++) { // look at each block in row
-            if (l1->row[trace.L1_index].col[i].tag == trace.L1_tag) { //cache hit
-               return;
-            }
-         }
-         // cache miss
-         for(int i = 0; i < l1->assoc; i++) { // look at each block in row
-            if (l1->row[trace.L1_index].col[i].tag == 0) { // is a block empty
-               // block is empty, read block from lower memeory
-               return;
-            }
-         }
-         // all blocks are empty
-         int colIdx = 0;
-         // use LRU to select block
-         if (l1->row[trace.L1_index].col[colIdx].dirty) { // block dirty
-            //write tag back
-         }
-         //read block from lower memory
-         l1->row[trace.L1_index].col[colIdx].dirty = false;
-      }
+      // l2 cache miss
+      int lruIdxl1 = lru(l1,trace.L1_index);
+      int lruIdxl2 = lru(l2,trace.L2_index);
+      l1->row[trace.L1_index].col[lruIdxl1].tag = trace.L1_tag;
+      l2->row[trace.L2_index].col[lruIdxl2].tag = trace.L2_tag;
+      l1->row[trace.L1_index].col[lruIdxl1].dirty = false;
+      l2->row[trace.L2_index].col[lruIdxl2].dirty = false;
+      return;
    }
    else {
-      // Cache Miss
-      // write to first block in both l1 and l2
+      // l1 not valid write tag to both caches and set not dirty
       l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
       l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
-      l1->row[trace.L1_index].valid = true;
-      l2->row[trace.L2_index].valid = true;
+      l1->row[trace.L1_index].col[0].dirty = false;
+      l2->row[trace.L2_index].col[0].dirty = false;
    }
 }
 
 void writeCache(cache_t *l1, cache_t *l2, traceData trace) {
-    return 0;
+   if (l1->row[trace.L1_index].valid) { // cache valid
+      for (int i = 0; i < l1->assoc; i++) {
+         if (l1->row[trace.L1_index].col[i].tag == trace.L1_tag) {
+            // l1 cache hit
+            return;
+         }
+      }
+      // l1 cache miss, check l2
+      for (int i = 0; i < l2->assoc; i++) {
+         if (l2->row[trace.L2_index].col[i].tag == trace.L2_tag) {
+            // l2 cache hit, find block in l1 to evict
+            int lruIdx = lru(l1,trace.L1_index);
+            if (l1->row[trace.L1_index].col[lruIdx].dirty) {
+               // block dirty, write tag back
+               l2->row[trace.L2_index].col[i].dirty = false;
+            }
+            // write to l1 cache
+            l1->row[trace.L1_index].col[lruIdx].tag = trace.L1_tag;
+            l1->row[trace.L1_index].col[lruIdx].dirty = true;
+            return;
+         }
+      }
+      // l2 cache miss
+      int lruIdxl1 = lru(l1,trace.L1_index);
+      int lruIdxl2 = lru(l2,trace.L2_index);
+      l1->row[trace.L1_index].col[lruIdxl1].tag = trace.L1_tag;
+      l2->row[trace.L2_index].col[lruIdxl2].tag = trace.L2_tag;
+      l1->row[trace.L1_index].col[lruIdxl1].dirty = true;
+      l2->row[trace.L2_index].col[lruIdxl2].dirty = false;
+      return;
+   }
+   else {
+      // l1 not valid write tag to both caches and set not dirty
+      l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
+      l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
+      l1->row[trace.L1_index].col[0].dirty = true;
+      l2->row[trace.L2_index].col[0].dirty = false;
+   }
+}
+
+int lru(cache_t *cache, unsigned int index) {
+return 0;
 }
 
 

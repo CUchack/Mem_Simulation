@@ -143,7 +143,7 @@ void simulate(mem_params params);
 void checkCache(cache_sys *caches, mem_params params, traceData trace);
 void readCache(cache_t *l1, cache_t *l2, traceData trace);
 void readCache(cache_t *l1, cache_t *l2, traceData trace);
-
+int lru(cache_t *cache, unsigned int index);
 void init_sim(mem_params *params);
 
 void printResultsToFile(mem_params params);
