@@ -92,13 +92,12 @@ typedef struct
 typedef struct
 {
     bool dirty;
+    bool valid;
     mem_addr_t tag;
-    int timestamp;
 } block_st;
 //Structure for a cache set; a pointer to an array of blocks
 typedef struct
 {
-    bool valid;
     block_st *col;
 }cache_set;
 
@@ -157,6 +156,7 @@ void simulate(mem_params params);
 void checkCache(cache_sys *caches, mem_params params, traceData trace);
 void readCache(cache_t *l1, cache_t *l2, traceData trace);
 void readCache(cache_t *l1, cache_t *l2, traceData trace);
+void lruUpdate(cache_t *cache, unsigned int index, unsigned int col);
 
 void init_sim(mem_params *params);
 

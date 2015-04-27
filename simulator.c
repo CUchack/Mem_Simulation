@@ -203,54 +203,87 @@ void checkCache(cache_sys *caches, mem_params params, traceData trace) {
 }
 
 void readCache(cache_t *l1, cache_t *l2, traceData trace) {
-   if (l1->row[trace.L1_index].valid) { // cache valid
-      if (l1->assoc == 1) { // direct mapped cache
-         if (l1->row[trace.L1_index].col[0].tag == trace.L1_tag) { // cache hit
-            return;
-         }
-         else { // cache miss
-            if (l1->row[trace.L1_index].col[0].dirty) { // block dirty
-               //write tag back
-            }
-            //read block from lower memory
-            l1->row[trace.L1_index].col[0].dirty = false;
-         }
-      }
-      else { // associative cache
-         for(int i = 0; i < l1->assoc; i++) { // look at each block in row
-            if (l1->row[trace.L1_index].col[i].tag == trace.L1_tag) { //cache hit
-               return;
-            }
-         }
-         // cache miss
-         for(int i = 0; i < l1->assoc; i++) { // look at each block in row
-            if (l1->row[trace.L1_index].col[i].tag == 0) { // is a block empty
-               // block is empty, read block from lower memeory
-               return;
-            }
-         }
-         // all blocks are empty
-         int colIdx = 0;
-         // use LRU to select block
-         if (l1->row[trace.L1_index].col[colIdx].dirty) { // block dirty
-            //write tag back
-         }
-         //read block from lower memory
-         l1->row[trace.L1_index].col[colIdx].dirty = false;
+   // seach l1 for tag
+   for (int i = 0; i < l1->assoc; i++) {
+      if ((l1->row[trace.L1_index].col[i].tag == trace.L1_tag) && (l1->row[trace.L1_index].col[i].valid)) {
+         // l1 cache hit
+         lruUpdate(l1,trace.L1_index,i);
+         return;
       }
    }
-   else {
-      // Cache Miss
-      // write to first block in both l1 and l2
-      l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
-      l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
-      l1->row[trace.L1_index].valid = true;
-      l2->row[trace.L2_index].valid = true;
+   // l1 cache miss, check l2
+   for (int i = 0; i < l2->assoc; i++) {
+      // search l2 for tag
+      if ((l2->row[trace.L2_index].col[i].tag == trace.L2_tag) && (l2->row[trace.L2_index].col[i].valid)) {
+         // l2 cache hit, find block in l1 to evict
+         lruUpdate(l2,trace.L2_index,i);
+         if (l1->row[trace.L1_index].col[0].dirty) {
+            // block dirty, write tag back
+            l2->row[trace.L2_index].col[i].dirty = false;
+         }
+         // write to l1 cache
+         l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
+         l1->row[trace.L1_index].col[0].dirty = false;
+         lruUpdate(l1,trace.L1_index,0);
+         return;
+      }
    }
+   // l2 cache miss or l1 does not contain any valid blocks
+   l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
+   l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
+   l1->row[trace.L1_index].col[0].dirty = false;
+   l2->row[trace.L2_index].col[0].dirty = false;
+   lruUpdate(l1,trace.L1_index,0);
+   lruUpdate(l2,trace.L2_index,0);
+   return;
 }
 
 void writeCache(cache_t *l1, cache_t *l2, traceData trace) {
-    return 0;
+   // seach l1 for tag
+   for (int i = 0; i < l1->assoc; i++) {
+      if ((l1->row[trace.L1_index].col[i].tag == trace.L1_tag) && (l1->row[trace.L1_index].col[i].valid)) {
+         // l1 cache hit
+         lruUpdate(l1,trace.L1_index,i);
+         return;
+      }
+   }
+   // l1 cache miss, check l2
+   for (int i = 0; i < l2->assoc; i++) {
+      // search l2 for tag
+      if ((l2->row[trace.L2_index].col[i].tag == trace.L2_tag) && (l2->row[trace.L2_index].col[i].valid)) {
+         // l2 cache hit, find block in l1 to evict
+         lruUpdate(l2,trace.L2_index,i);
+         if (l1->row[trace.L1_index].col[0].dirty) {
+            // block dirty, write tag back
+            l2->row[trace.L2_index].col[i].dirty = false;
+         }
+         // write to l1 cache
+         l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
+         l1->row[trace.L1_index].col[0].dirty = true;
+         lruUpdate(l1,trace.L1_index,0);
+         return;
+      }
+   }
+   // l2 cache miss or l1 does not contain any valid blocks
+   l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
+   l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
+   l1->row[trace.L1_index].col[0].dirty = false;
+   l2->row[trace.L2_index].col[0].dirty = false;
+   lruUpdate(l1,trace.L1_index,0);
+   lruUpdate(l2,trace.L2_index,0);
+   return;
+}
+
+// put recently used block_st at end. LRU  block_st is at beginning
+void lruUpdate(cache_t *cache, unsigned int index, unsigned int col) {
+   if (col == cache->assoc-1) {
+      return;
+   }
+   block_st curr = cache->row[index].col[col];
+   for (int i = col; col < cache->assoc-1; i++) {
+      cache->row[index].col[i] = cache->row[index].col[i+1];
+   }
+   cache->row[index].col[cache->assoc-1] = curr;
 }
 
 
