@@ -178,7 +178,7 @@ void simulate (mem_params params){
 
     }
     fclose(logfile);
-    printResultsToFile(params);
+    printResultsToFile(&cache.L1_I, &cache.L1_D, &cache.L2, params);
 }
 
 /***************************************************************************
@@ -257,7 +257,7 @@ void writeCache(cache_t *l1, cache_t *l2, traceData trace) {
 /**************************************************************************
 This function prints the simulation results to a file
 ***************************************************************************/
-void printResultsToFile(mem_params params){
+void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params params){
     float percent;
     static char res[30];
     unsigned long exec_time=10;
@@ -387,9 +387,36 @@ void printResultsToFile(mem_params params){
     fprintf(results, "----------------------------------------------------------------------------\n\n");
     fprintf(results, "Cache final contents - Index and Tag values are in HEX\n\n");
     fprintf(results, "MemoryLevel: L1i\n");
-    for (int i = 0; i < params.L1.assoc; i++){
-        for (int j = 0; j < params.L1.numRowsL1; j++){
 
+    for (int i = 0; i < params.L1.numRowsL1; i++){
+        if ((&l1i->row[i].valid)){
+            fprintf(results, "Index:    %x  |", i);
+            for (int j = 0; j < params.L1.assoc; j++){
+                fprintf(results," V:%d D:%d Tag: %llx | ", &l1i->row[i].valid, &l1i->row[i].col[j].dirty, &l1i->row[i].col[j].tag);
+            }
+            fprintf(results, "\n");
+        }
+    }
+    fprintf(results, "\nMemoryLevel: L1d\n");
+
+    for (int i = 0; i < params.L1.numRowsL1; i++){
+        if ((&l1d->row[i].valid)){
+            fprintf(results, "Index:    %x  |", i);
+            for (int j = 0; j < params.L1.assoc; j++){
+                fprintf(results," V:%d D:%d Tag: %llx | ", &l1d->row[i].valid, &l1d->row[i].col[j].dirty, &l1d->row[i].col[j].tag);
+            }
+            fprintf(results, "\n");
+        }
+    }
+    fprintf(results, "\nMemoryLevel: L2\n");
+
+    for (int i = 0; i < params.L2.numRowsL2; i++){
+        if ((&l2->row[i].valid)){
+            fprintf(results, "Index:    %x  |", i);
+            for (int j = 0; j < params.L2.assoc; j++){
+                fprintf(results," V:%d D:%d Tag: %llx | ", &l2->row[i].valid, &l2->row[i].col[j].dirty, &l2->row[i].col[j].tag);
+            }
+            fprintf(results, "\n");
         }
     }
 

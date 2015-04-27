@@ -160,7 +160,7 @@ void readCache(cache_t *l1, cache_t *l2, traceData trace);
 
 void init_sim(mem_params *params);
 
-void printResultsToFile(mem_params params);
+void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params params);
 //unsigned int getIndex(mem_addr_t address, int indexSize, int offset);
 //unsigned long getTag(mem_addr_t address, int tagSize, int offset);
 

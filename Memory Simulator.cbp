@@ -11,11 +11,10 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-f config_file" />
+				<Option parameters="-t tr1 &lt; tr1" />
 				<Compiler>
 					<Add option="-ansi -std=gnu99" />
 					<Add option="-g" />
-					<Add option="-ansi -std=gnu99" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
