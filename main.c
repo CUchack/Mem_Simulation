@@ -3,7 +3,7 @@
 
 //Initialize structure that holds default memory parameters
 const mem_params Default_params = {.L1.block_size = 32, .L1.cache_size = 8192, .L1.assoc = 1,
-.L1.hit_time = 1, .L1.miss_time = 1, .L1.bus_width = 4, .L2.block_size = 64, .L2.cache_size = 32768,
+.L1.hit_time = 1, .L1.miss_time = 1, .L1.bus_width = 32, .L2.block_size = 64, .L2.cache_size = 32768,
 .L2.assoc = 1, .L2.hit_time = 5, .L2.miss_time = 7, .L2.transfer_time = 5,
 .L2.bus_width = 16, .mmem.sendAddr = 10, .mmem.ready = 30, .mmem.chunkTime = 15,
 .mmem.chunkSize = 8,.setName = "Default"};

@@ -12,3 +12,19 @@
 	<math.h>
 	<string.h>
 
+1430300139 source:/home/hack/Documents/Computer Organization/Project/Memory Simulator/main.c
+	"simulator.h"
+
+1430201212 /home/hack/Documents/Computer Organization/Project/Memory Simulator/simulator.h
+	<stdlib.h>
+	<stdio.h>
+	<getopt.h>
+	<strings.h>
+	<limits.h>
+	<stdbool.h>
+	<math.h>
+	<string.h>
+
+1430300139 source:/home/hack/Documents/Computer Organization/Project/Memory Simulator/simulator.c
+	"simulator.h"
+
