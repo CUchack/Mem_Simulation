@@ -449,9 +449,9 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    FILE *results = fopen(res,"w");
 
    /**** Initialize vals for print testing ******/
-   vals.read_cycles = 100;
-   vals.write_cycles = 100;
-   vals.instruction_cycles = 400;
+//   vals.read_cycles = 100;
+//   vals.write_cycles = 100;
+//   vals.instruction_cycles = 400;
    vals.exec_time = vals.read_cycles + vals.write_cycles + vals.instruction_cycles;
 
    /*********************************************/
@@ -538,11 +538,11 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    //Calculate memory cost according to specifications
    int l1_cost, l2_cost, mem_cost, total_cost, temp;
 
-   temp = 100* (pow(2,(params.L1.cache_size/4096)-1) *log2(params.L1.assoc)+1);
-   temp = pow(2,(params.L1.cache_size/4096)-1);
-   temp = (log2(params.L1.assoc));
-   temp = 50* pow(2,(params.L2.cache_size/65336));
-   temp = 50*(log2(params.L2.assoc));
+//   temp = 100* (pow(2,(params.L1.cache_size/4096)-1) *log2(params.L1.assoc)+1);
+//   temp = pow(2,(params.L1.cache_size/4096)-1);
+//   temp = (log2(params.L1.assoc));
+//   temp = 50* pow(2,(params.L2.cache_size/65336));
+//   temp = 50*(log2(params.L2.assoc));
 
 
 //   if (params.L1.assoc > 1)
@@ -560,10 +560,10 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "L2 cache cost = $%d\n", l2_cost);
    mem_cost = 75 + (params.mmem.ready/50)*200 + (params.mmem.chunkSize/16)*100;
 
-   temp = 50 * (50.0/params.mmem.ready);
-   temp = 50.0/params.mmem.ready;
-   temp = (params.mmem.ready/50)*200;
-   temp = (params.mmem.chunkSize/16)*100;
+//   temp = 50 * (50.0/params.mmem.ready);
+//   temp = 50.0/params.mmem.ready;
+//   temp = (params.mmem.ready/50)*200;
+//   temp = (params.mmem.chunkSize/16)*100;
 //   temp =
 
    fprintf(results, "Memory Cost = $%d\n", mem_cost);
