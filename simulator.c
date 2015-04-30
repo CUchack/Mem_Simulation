@@ -451,13 +451,13 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    /**** Initialize vals for print testing ******/
 //   vals.read_cycles = 100;
 //   vals.write_cycles = 100;
-//   vals.instruction_cycles = 400;
+   vals.instruction_cycles = 1;
    vals.exec_time = vals.read_cycles + vals.write_cycles + vals.instruction_cycles;
 
    /*********************************************/
 
    fprintf(results, "---------------------------------------------------------\n");
-   fprintf(results, "      %s.%s     Simulation Results\n", trace_file, params.setName);
+   fprintf(results, "     Simulation Results    %s.%s\n", trace_file, params.setName);
    fprintf(results, "---------------------------------------------------------\n\n");
    fprintf(results, "Memory System:\n");
    fprintf(results, "  L1 Dcache size = %d : ways = %d : block size = %d\n", params.L1.cache_size, params.L1.assoc, params.L1.block_size);
