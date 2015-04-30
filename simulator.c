@@ -157,7 +157,7 @@ the next level until it gets to main memory.  It also tracks the statistics
 for the main result printout
 ***************************************************************************/
 void checkCache(cache_sys *caches, mem_params params, traceData trace) {
-   if (vals.instruction_references+vals.number_reads+vals.number_writes%380000 == 0) {
+   if ((vals.instruction_references+vals.number_reads+vals.number_writes)%380000 == 0) {
       flushCaches(&caches->L1_I,&caches->L1_D,&caches->L2,params);
    }
    switch (trace.refType) {
@@ -522,8 +522,8 @@ void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params) {
    for (int i = 0; i < params.L2.numRowsL2; i++) {
       for (int j = 0; j < params.L2.assoc; j++) {
          if (l2->row[i].col[j].valid && l2->row[i].col[j].dirty) {
-            l2->row[idx].col[j].dirty = false;
-            l2->row[idx].col[j].valid = false;
+            l2->row[i].col[j].dirty = false;
+            l2->row[i].col[j].valid = false;
             vals.flushes+=(40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize); // l2 writeback
          }
       }
@@ -537,7 +537,7 @@ This function prints the simulation results to a file
 ***************************************************************************/
 void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params params) {
    float percent;
-   static char res[30];
+   static char res[100];
    float cpi = 0;
    strcpy(res,"output.");
    strcat(res, trace_file);
@@ -550,7 +550,12 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
 //   vals.read_cycles = 100;
 //   vals.write_cycles = 100;
 //   vals.instruction_cycles = 400;
-   vals.exec_time = vals.read_cycles + vals.write_cycles + vals.instruction_cycles;
+    if ((vals.read_cycles + vals.write_cycles + vals.instruction_cycles) == 0) {
+        vals.exec_time = 1;
+    }
+    else {
+        vals.exec_time = vals.read_cycles + vals.write_cycles + vals.instruction_cycles;
+    }
 
    /*********************************************/
 
@@ -562,40 +567,55 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "  L1 Icache size = %d : ways = %d : block size = %d\n", params.L1.cache_size, params.L1.assoc, params.L1.block_size);
    fprintf(results, "  L2 Cache size = %d : ways = %d : block size = %d\n", params.L2.cache_size, params.L2.assoc, params.L2.block_size);
    fprintf(results, "  Memory ready time  = %d : chunksize = %d : chunktime = %d\n\n", params.mmem.ready, params.mmem.chunkSize, params.mmem.chunkTime);
-   fprintf(results, "Execute time =    %llu;    Total refs = %ld\n", vals.exec_time, (vals.instruction_references + vals.number_reads + vals.number_writes));
-   fprintf(results, "Flush time =      %lu\n", vals.flush_time);
-   fprintf(results, "Instruction references = %lu;    Data references = %lu\n\n", vals.instruction_references, (vals.number_reads + vals.number_writes));
+   fprintf(results, "Execute time =    %llu;    Total refs = %lld\n", vals.exec_time, (vals.instruction_references + vals.number_reads + vals.number_writes));
+   fprintf(results, "Flush time =      %llu\n", vals.flush_time);
+   fprintf(results, "Instruction references = %llu;    Data references = %llu\n\n", vals.instruction_references, (vals.number_reads + vals.number_writes));
    fprintf(results, "Number of reference types:     [Percentage]\n");
-   percent = (float)(vals.number_reads*100/(vals.instruction_references + vals.number_reads + vals.number_writes));
-   fprintf(results, "  Reads   =             %lu     [%.1f\%]\n", vals.number_reads, percent);
-   percent = (float)(vals.number_writes*100/(vals.instruction_references + vals.number_reads + vals.number_writes));
-   fprintf(results, "  Writes  =             %lu     [%.1f\%]\n", vals.number_writes, percent);
-   percent = (float)(vals.instruction_references*100/(vals.instruction_references + vals.number_reads + vals.number_writes));
-   fprintf(results, "  Inst.   =             %lu     [%.1f\%]\n", vals.instruction_references, percent);
-   fprintf(results, "  Total   =             %lu\n\n", (vals.instruction_references + vals.number_reads + vals.number_writes));
+   if ((vals.instruction_references + vals.number_reads + vals.number_writes) == 0) {
+        percent = 0;
+   }
+   else {
+        percent = (float)((float)vals.number_reads*100/(float)(vals.instruction_references + vals.number_reads + vals.number_writes));
+   }
+   fprintf(results, "  Reads   =             %llu     [%.1f\%]\n", vals.number_reads, percent);
+   if((vals.instruction_references + vals.number_reads + vals.number_writes) == 0) {
+        percent = 0;
+   }
+   else {
+        percent = (float)(vals.number_writes*100/(vals.instruction_references + vals.number_reads + vals.number_writes));
+   }
+   fprintf(results, "  Writes  =             %llu     [%.1f\%]\n", vals.number_writes, percent);
+   if ((vals.instruction_references + vals.number_reads + vals.number_writes) == 0) {
+        percent = 0;
+   }
+   else {
+        percent = (float)((float)vals.instruction_references*100/((float)vals.instruction_references + (float)vals.number_reads + (float)vals.number_writes));
+   }
+   fprintf(results, "  Inst.   =             %llu     [%.1f\%]\n", vals.instruction_references, percent);
+   fprintf(results, "  Total   =             %llu\n\n", (vals.instruction_references + vals.number_reads + vals.number_writes));
    fprintf(results, "Total cycles for activities:  [Percentage]\n");
-   percent = (float)(vals.read_cycles*100/vals.exec_time);
+   percent = (float)((float)vals.read_cycles*100/(float)vals.exec_time);
    fprintf(results, "  Reads   =            %lld     [%.1f\%]\n", vals.read_cycles, percent);
-   percent = (float)(vals.write_cycles*100/vals.exec_time);
+   percent = (float)((float)vals.write_cycles*100/(float)vals.exec_time);
    fprintf(results, "  Writes  =            %lld     [%.1f\%]\n", vals.write_cycles, percent);
-   percent = (float)(vals.instruction_cycles*100/vals.exec_time);
+   percent = (float)((float)vals.instruction_cycles*100/(float)vals.exec_time);
    fprintf(results, "  Inst.   =            %lld     [%.1f\%]\n", vals.instruction_cycles, percent);
    fprintf(results, "  Total   =            %lld\n\n", vals.exec_time);
    fprintf(results, "Average cycles per activity:\n");
    if (vals.number_reads != 0) {
-      fprintf(results, "  Read    =            %.1f\n", (float)(vals.read_cycles/vals.number_reads));
+      fprintf(results, "  Read    =            %.1f\n", (float)((float)vals.read_cycles/(float)vals.number_reads));
    } else
       fprintf(results, "  Read    =            N/A\n");
 
    if (vals.number_writes != 0) {
-      fprintf(results, "  Write   =            %.1f\n", (float)(vals.write_cycles/vals.number_writes));
+      fprintf(results, "  Write   =            %.1f\n", (float)((float)vals.write_cycles/(float)vals.number_writes));
    } else
       fprintf(results, "  Write   =            N/A\n");
    if (vals.instruction_references != 0) {
-      fprintf(results, "  Inst.   =            %.1f\n", (float)(vals.instruction_cycles/vals.instruction_references));
+      fprintf(results, "  Inst.   =            %.1f\n", (float)((float)vals.instruction_cycles/(float)vals.instruction_references));
    } else
       fprintf(results, "  Inst.   =            N/A\n");
-   cpi = (vals.read_cycles+vals.write_cycles+vals.instruction_cycles)/(vals.number_reads+vals.number_writes+vals.instruction_references);
+   cpi = ((float)vals.read_cycles+(float)vals.write_cycles+(float)vals.instruction_cycles)/((float)vals.number_reads+(float)vals.number_writes+(float)vals.instruction_references);
    //Calculate ideal exec time and CPI
    fprintf(results, "Ideal: Exec. Time = %llu;   CPI = %.1f\n", vals.exec_time, cpi);
    //calculate ideal exec time and CPI for mis-aligned access
@@ -603,40 +623,58 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "Ideal mis-aligned: Exec. Time = %llu;   CPI = %.1f\n\n", vals.exec_time, cpi);
 
    fprintf(results, "Memory Level:      L1i\n");
-   fprintf(results, "  Hit Count       =   %lu\n", vals.L1i_hit);
-   fprintf(results, "  Miss count      =   %lu\n", vals.L1i_miss);
-   fprintf(results, "  Total Requests  =   %lu\n", (vals.L1i_hit + vals.L1i_miss));
-   fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L1i_hit*100/((float)vals.L1i_hit + (float)vals.L1i_miss)));
-   fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L1i_miss*100/((float)vals.L1i_hit + (float)vals.L1i_miss)));
+   fprintf(results, "  Hit Count       =   %llu\n", vals.L1i_hit);
+   fprintf(results, "  Miss count      =   %llu\n", vals.L1i_miss);
+   fprintf(results, "  Total Requests  =   %llu\n", (vals.L1i_hit + vals.L1i_miss));
+   if ((vals.L1i_hit + vals.L1i_miss) == 0) {
+       fprintf(results, "  Hit Rate        =   N/A\n");
+       fprintf(results, "  Miss Rate       =   N/A\n");
+   }
+   else {
+        fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L1i_hit*100/((float)vals.L1i_hit + (float)vals.L1i_miss)));
+        fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L1i_miss*100/((float)vals.L1i_hit + (float)vals.L1i_miss)));
+   }
    fprintf(results, "  Kickouts        =   %lu\n", vals.L1i_kickouts);
    fprintf(results, "  Dirty kickouts  =   %lu\n", vals.L1i_dirty_kickouts);
    fprintf(results, "  Transfers       =   %lu\n", vals.L1i_transfers);
    fprintf(results, "  Flush Kickouts  =   %lu\n\n", vals.flushes);
 
    fprintf(results, "Memory Level:      L1d\n");
-   fprintf(results, "  Hit Count       =   %lu\n", vals.L1d_hit);
-   fprintf(results, "  Miss count      =   %lu\n", vals.L1d_miss);
-   fprintf(results, "  Total Requests  =   %lu\n", (vals.L1d_hit + vals.L1d_miss));
-   fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L1d_hit*100/((float)vals.L1d_hit + (float)vals.L1d_miss)));
-   fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L1d_miss*100/((float)vals.L1d_hit + (float)vals.L1d_miss)));
+   fprintf(results, "  Hit Count       =   %llu\n", vals.L1d_hit);
+   fprintf(results, "  Miss count      =   %llu\n", vals.L1d_miss);
+   fprintf(results, "  Total Requests  =   %llu\n", (vals.L1d_hit + vals.L1d_miss));
+   if ((vals.L1d_hit + vals.L1d_miss) == 0) {
+       fprintf(results, "  Hit Rate        =   N/A\n");
+       fprintf(results, "  Miss Rate       =   N/A\n");
+   }
+   else {
+        fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L1d_hit*100/((float)vals.L1d_hit + (float)vals.L1d_miss)));
+        fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L1d_miss*100/((float)vals.L1d_hit + (float)vals.L1d_miss)));
+   }
    fprintf(results, "  Kickouts        =   %lu\n", vals.L1d_kickouts);
    fprintf(results, "  Dirty kickouts  =   %lu\n", vals.L1d_dirty_kickouts);
    fprintf(results, "  Transfers       =   %lu\n", vals.L1d_transfers);
    fprintf(results, "  Flush Kickouts  =   %lu\n\n", vals.flushes);
 
    fprintf(results, "Memory Level:      L2\n");
-   fprintf(results, "  Hit Count       =   %lu\n", vals.L2_hit);
-   fprintf(results, "  Miss count      =   %lu\n", vals.L2_miss);
-   fprintf(results, "  Total Requests  =   %lu\n", (vals.L2_hit + vals.L2_miss));
-   fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L2_hit*100/((float)vals.L2_hit + (float)vals.L2_miss)));
-   fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L2_miss*100/((float)vals.L2_hit + (float)vals.L2_miss)));
+   fprintf(results, "  Hit Count       =   %llu\n", vals.L2_hit);
+   fprintf(results, "  Miss count      =   %llu\n", vals.L2_miss);
+   fprintf(results, "  Total Requests  =   %llu\n", (vals.L2_hit + vals.L2_miss));
+   if ((vals.L2_hit + vals.L2_miss) == 0) {
+       fprintf(results, "  Hit Rate        =   N/A\n");
+       fprintf(results, "  Miss Rate       =   N/A\n");
+   }
+   else {
+        fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L2_hit*100/((float)vals.L2_hit + (float)vals.L2_miss)));
+        fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L2_miss*100/((float)vals.L2_hit + (float)vals.L2_miss)));
+   }
    fprintf(results, "  Kickouts        =   %lu\n", vals.L2_kickouts);
    fprintf(results, "  Dirty kickouts  =   %lu\n", vals.L2_dirty_kickouts);
    fprintf(results, "  Transfers       =   %lu\n", vals.L2_transfers);
    fprintf(results, "  Flush Kickouts  =   %lu\n\n", vals.flushes);
 
    //Calculate memory cost according to specifications
-   int l1_cost, l2_cost, mem_cost, total_cost, temp;
+   int l1_cost, l2_cost, mem_cost, total_cost;
 
 //   temp = 100* (pow(2,(params.L1.cache_size/4096)-1) *log2(params.L1.assoc)+1);
 //   temp = pow(2,(params.L1.cache_size/4096)-1);
