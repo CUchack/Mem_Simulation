@@ -157,9 +157,9 @@ the next level until it gets to main memory.  It also tracks the statistics
 for the main result printout
 ***************************************************************************/
 void checkCache(cache_sys *caches, mem_params params, traceData trace) {
-   if (vals.instruction_references+vals.number_reads+vals.number_writes%380000 == 0) {
-      flushCaches(&caches->L1_I,&caches->L1_D,&caches->L2,params);
-   }
+   //if (vals.instruction_references+vals.number_reads+vals.number_writes%380000 == 0) {
+   //   flushCaches(&caches->L1_I,&caches->L1_D,&caches->L2,params);
+  // }
    switch (trace.refType) {
    case 'I':
       instReadCache(&caches->L1_I, &caches->L2, trace, params);
@@ -214,7 +214,7 @@ void instReadCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params)
             // l1 valid, l1 kickout required
             if (l1->row[trace.L1_index].col[0].dirty) {
                // l1 dirty, l2 dirty kickout required
-               l2->row[trace.L2_index].col[0].dirty = false;
+               l2->row[trace.L2_index].col[0].dirty = true;
                if (l2->row[trace.L2_index].col[0].valid) {
                   // l1 dirty, l2 valid, l2 kickout required
                   if (l2->row[trace.L2_index].col[0].dirty) {
@@ -492,6 +492,8 @@ void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params) {
             tag = addr >> (params.L2.numOffsetL2 + params.L2.numIndexL2);
             l2->row[idx].col[0].tag = tag;
             l2->row[idx].col[0].dirty = true;
+            l1i->row[i].col[j].valid = false;
+            l2->row[idx].col[0].valid = true;
             l1i->row[i].col[j].dirty = false;
             vals.flushes+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
             lruUpdate(l2,i,j);
@@ -506,6 +508,8 @@ void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params) {
             tag = addr >> (params.L2.numOffsetL2 + params.L2.numIndexL2);
             l2->row[idx].col[0].tag = tag;
             l2->row[idx].col[0].dirty = true;
+            l1d->row[i].col[j].valid = false;
+            l2->row[idx].col[0].valid = true;
             l1d->row[i].col[j].dirty = false;
             vals.flushes+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
             lruUpdate(l2,i,j);
@@ -516,6 +520,7 @@ void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params) {
       for (int j = 0; j < params.L2.assoc; j++) {
          if (l2->row[i].col[j].valid && l2->row[i].col[j].dirty) {
             l2->row[idx].col[j].dirty = false;
+            l2->row[idx].col[j].valid = false;
             vals.flushes+=(40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize); // l2 writeback
          }
       }
