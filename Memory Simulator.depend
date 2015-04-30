@@ -1,0 +1,30 @@
+# depslib dependency file v1.0
+1430201212 source:/home/hack/Documents/Computer Organization/Project/Memory Simulator/Mem_Simulation/main.c
+	"simulator.h"
+
+1430201212 /home/hack/Documents/Computer Organization/Project/Memory Simulator/Mem_Simulation/simulator.h
+	<stdlib.h>
+	<stdio.h>
+	<getopt.h>
+	<strings.h>
+	<limits.h>
+	<stdbool.h>
+	<math.h>
+	<string.h>
+
+1430300139 source:/home/hack/Documents/Computer Organization/Project/Memory Simulator/main.c
+	"simulator.h"
+
+1430361054 /home/hack/Documents/Computer Organization/Project/Memory Simulator/simulator.h
+	<stdlib.h>
+	<stdio.h>
+	<getopt.h>
+	<strings.h>
+	<limits.h>
+	<stdbool.h>
+	<math.h>
+	<string.h>
+
+1430303491 source:/home/hack/Documents/Computer Organization/Project/Memory Simulator/simulator.c
+	"simulator.h"
+

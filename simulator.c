@@ -157,9 +157,9 @@ the next level until it gets to main memory.  It also tracks the statistics
 for the main result printout
 ***************************************************************************/
 void checkCache(cache_sys *caches, mem_params params, traceData trace) {
-   //if (vals.instruction_references+vals.number_reads+vals.number_writes%380000 == 0) {
-   //   flushCaches(&caches->L1_I,&caches->L1_D,&caches->L2,params);
-  // }
+   if (vals.instruction_references+vals.number_reads+vals.number_writes%380000 == 0) {
+      flushCaches(&caches->L1_I,&caches->L1_D,&caches->L2,params);
+   }
    switch (trace.refType) {
    case 'I':
       instReadCache(&caches->L1_I, &caches->L2, trace, params);
