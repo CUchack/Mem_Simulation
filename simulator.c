@@ -214,7 +214,7 @@ void instReadCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params)
             // l1 valid, l1 kickout required
             if (l1->row[trace.L1_index].col[0].dirty) {
                // l1 dirty, l2 dirty kickout required
-               l2->row[trace.L2_index].col[0].dirty = false;
+               l2->row[trace.L2_index].col[0].dirty = true;
                if (l2->row[trace.L2_index].col[0].valid) {
                   // l1 dirty, l2 valid, l2 kickout required
                   if (l2->row[trace.L2_index].col[0].dirty) {
@@ -492,6 +492,8 @@ void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params) {
             tag = addr >> (params.L2.numOffsetL2 + params.L2.numIndexL2);
             l2->row[idx].col[0].tag = tag;
             l2->row[idx].col[0].dirty = true;
+            l1i->row[i].col[j].valid = false;
+            l2->row[idx].col[0].valid = true;
             l1i->row[i].col[j].dirty = false;
             vals.flushes+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
             lruUpdate(l2,i,j);
@@ -506,6 +508,8 @@ void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params) {
             tag = addr >> (params.L2.numOffsetL2 + params.L2.numIndexL2);
             l2->row[idx].col[0].tag = tag;
             l2->row[idx].col[0].dirty = true;
+            l1d->row[i].col[j].valid = false;
+            l2->row[idx].col[0].valid = true;
             l1d->row[i].col[j].dirty = false;
             vals.flushes+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
             lruUpdate(l2,i,j);
@@ -516,6 +520,7 @@ void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params) {
       for (int j = 0; j < params.L2.assoc; j++) {
          if (l2->row[i].col[j].valid && l2->row[i].col[j].dirty) {
             l2->row[idx].col[j].dirty = false;
+            l2->row[idx].col[j].valid = false;
             vals.flushes+=(40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize); // l2 writeback
          }
       }
@@ -595,8 +600,8 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "  Hit Count       =   %lu\n", vals.L1i_hit);
    fprintf(results, "  Miss count      =   %lu\n", vals.L1i_miss);
    fprintf(results, "  Total Requests  =   %lu\n", (vals.L1i_hit + vals.L1i_miss));
-   fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L1i_hit*100/((float)vals.L1i_hit + vals.L1i_miss)));
-   fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L1i_miss*100/((float)vals.L1i_hit + vals.L1i_miss)));
+   fprintf(results, "  Hit Rate        =   %f\%\n", (float)(vals.L1i_hit*100/(vals.L1i_hit + vals.L1i_miss)));
+   fprintf(results, "  Miss Rate       =   %f\%\n", (float)(vals.L1i_miss*100/(vals.L1i_hit + vals.L1i_miss)));
    fprintf(results, "  Kickouts        =   %lu\n", vals.L1i_kickouts);
    fprintf(results, "  Dirty kickouts  =   %lu\n", vals.L1i_dirty_kickouts);
    fprintf(results, "  Transfers       =   %lu\n", vals.L1i_transfers);
@@ -606,8 +611,8 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "  Hit Count       =   %lu\n", vals.L1d_hit);
    fprintf(results, "  Miss count      =   %lu\n", vals.L1d_miss);
    fprintf(results, "  Total Requests  =   %lu\n", (vals.L1i_hit + vals.L1i_miss));
-   fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L1d_hit*100/((float)vals.L1d_hit + (float)vals.L1d_miss)));
-   fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L1d_miss*100/((float)vals.L1d_hit + (float)vals.L1d_miss)));
+   fprintf(results, "  Hit Rate        =   %f\%\n", (float)(vals.L1d_hit*100/(vals.L1d_hit + vals.L1d_miss)));
+   fprintf(results, "  Miss Rate       =   %f\%\n", (float)(vals.L1d_miss*100/(vals.L1d_hit + vals.L1d_miss)));
    fprintf(results, "  Kickouts        =   %lu\n", vals.L1d_kickouts);
    fprintf(results, "  Dirty kickouts  =   %lu\n", vals.L1d_dirty_kickouts);
    fprintf(results, "  Transfers       =   %lu\n", vals.L1d_transfers);
@@ -617,8 +622,8 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "  Hit Count       =   %lu\n", vals.L2_hit);
    fprintf(results, "  Miss count      =   %lu\n", vals.L2_miss);
    fprintf(results, "  Total Requests  =   %lu\n", (vals.L2_hit + vals.L2_miss));
-   fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L2_hit*100/((float)vals.L2_hit + (float)vals.L2_miss)));
-   fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L2_miss*100/((float)vals.L2_hit + (float)vals.L2_miss)));
+   fprintf(results, "  Hit Rate        =   %f\%\n", (float)(vals.L2_hit*100/(vals.L2_hit + vals.L2_miss)));
+   fprintf(results, "  Miss Rate       =   %f\%\n", (float)(vals.L2_miss*100/(vals.L2_hit + vals.L2_miss)));
    fprintf(results, "  Kickouts        =   %lu\n", vals.L2_kickouts);
    fprintf(results, "  Dirty kickouts  =   %lu\n", vals.L2_dirty_kickouts);
    fprintf(results, "  Transfers       =   %lu\n", vals.L2_transfers);
