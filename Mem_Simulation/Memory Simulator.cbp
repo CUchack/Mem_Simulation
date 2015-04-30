@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-f config_file -t tr6 &lt; tr6" />
+				<Option parameters="-f config_file -t sjeng &lt; sjeng" />
 				<Compiler>
 					<Add option="-ansi -std=gnu99" />
 					<Add option="-g" />
