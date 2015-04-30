@@ -97,34 +97,34 @@ typedef struct {
 
 //Structure that keeps track of the statistical variables for the simulation run
 typedef struct {
-   long total_hit;
-   long flushes;
-   long L1i_hit;
-   long L1d_hit;
-   long L2_hit;
-   long total_miss;
-   long L1i_miss;
-   long L1d_miss;
-   long L2_miss;
-   long total_kickouts;
-   long L1i_kickouts;
-   long L1d_kickouts;
-   long L2_kickouts;
-   long total_dirty_kickouts;
-   long L1i_dirty_kickouts;
-   long L1d_dirty_kickouts;
-   long L2_dirty_kickouts;
-   long L1i_transfers;
-   long L1d_transfers;
-   long L2_transfers;
-   long long exec_time;
-   long instruction_references;
-   long number_reads;
-   long number_writes;
-   long flush_time;
-   long long read_cycles;
-   long long write_cycles;
-   long long instruction_cycles;
+   unsigned long long total_hit;
+   unsigned long flushes;
+   unsigned long long L1i_hit;
+   unsigned long long L1d_hit;
+   unsigned long long L2_hit;
+   unsigned long long total_miss;
+   unsigned long long L1i_miss;
+   unsigned long long L1d_miss;
+   unsigned long long L2_miss;
+   unsigned long total_kickouts;
+   unsigned long L1i_kickouts;
+   unsigned long L1d_kickouts;
+   unsigned long L2_kickouts;
+   unsigned long total_dirty_kickouts;
+   unsigned long L1i_dirty_kickouts;
+   unsigned long L1d_dirty_kickouts;
+   unsigned long L2_dirty_kickouts;
+   unsigned long L1i_transfers;
+   unsigned long L1d_transfers;
+   unsigned long L2_transfers;
+   unsigned long long exec_time;
+   unsigned long long instruction_references;
+   unsigned long long number_reads;
+   unsigned long long number_writes;
+   unsigned long long flush_time;
+   unsigned long long read_cycles;
+   unsigned long long write_cycles;
+   unsigned long long instruction_cycles;
    //long num_
 } cacheVals;
 
