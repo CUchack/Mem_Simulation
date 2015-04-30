@@ -537,7 +537,7 @@ This function prints the simulation results to a file
 ***************************************************************************/
 void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params params) {
    float percent;
-   static char res[30];
+   static char res[100];
    float cpi = 0;
    strcpy(res,"output.");
    strcat(res, trace_file);
