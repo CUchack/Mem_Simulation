@@ -255,6 +255,7 @@ void instReadCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params)
    }
    // l2 cache miss
    vals.L2_miss++;
+   vals.L1i_hit+=reqsl1-1;
    vals.L2_transfers++;
    vals.L1i_hit+=reqsl1-1;
    vals.instruction_cycles+=7; // l2 miss
@@ -349,6 +350,8 @@ void dataReadCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params)
       }
       // instant dirty kickout l1 -> l2 -> mem
       vals.L1d_kickouts++;
+      vals.L2_dirty_kickouts++;
+      vals.L2_kickouts++;
    }
    // l2 cache miss
    vals.L2_miss++;
@@ -544,6 +547,9 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    FILE *results = fopen(res,"w");
 
    /**** Initialize vals for print testing ******/
+//   vals.read_cycles = 100;
+//   vals.write_cycles = 100;
+//   vals.instruction_cycles = 400;
    vals.exec_time = vals.read_cycles + vals.write_cycles + vals.instruction_cycles;
 
    /*********************************************/
@@ -600,8 +606,8 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "  Hit Count       =   %lu\n", vals.L1i_hit);
    fprintf(results, "  Miss count      =   %lu\n", vals.L1i_miss);
    fprintf(results, "  Total Requests  =   %lu\n", (vals.L1i_hit + vals.L1i_miss));
-   fprintf(results, "  Hit Rate        =   %f\%\n", (float)(vals.L1i_hit*100/(vals.L1i_hit + vals.L1i_miss)));
-   fprintf(results, "  Miss Rate       =   %f\%\n", (float)(vals.L1i_miss*100/(vals.L1i_hit + vals.L1i_miss)));
+   fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L1i_hit*100/((float)vals.L1i_hit + (float)vals.L1i_miss)));
+   fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L1i_miss*100/((float)vals.L1i_hit + (float)vals.L1i_miss)));
    fprintf(results, "  Kickouts        =   %lu\n", vals.L1i_kickouts);
    fprintf(results, "  Dirty kickouts  =   %lu\n", vals.L1i_dirty_kickouts);
    fprintf(results, "  Transfers       =   %lu\n", vals.L1i_transfers);
@@ -610,9 +616,9 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "Memory Level:      L1d\n");
    fprintf(results, "  Hit Count       =   %lu\n", vals.L1d_hit);
    fprintf(results, "  Miss count      =   %lu\n", vals.L1d_miss);
-   fprintf(results, "  Total Requests  =   %lu\n", (vals.L1i_hit + vals.L1i_miss));
-   fprintf(results, "  Hit Rate        =   %f\%\n", (float)(vals.L1d_hit*100/(vals.L1d_hit + vals.L1d_miss)));
-   fprintf(results, "  Miss Rate       =   %f\%\n", (float)(vals.L1d_miss*100/(vals.L1d_hit + vals.L1d_miss)));
+   fprintf(results, "  Total Requests  =   %lu\n", (vals.L1d_hit + vals.L1d_miss));
+   fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L1d_hit*100/((float)vals.L1d_hit + (float)vals.L1d_miss)));
+   fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L1d_miss*100/((float)vals.L1d_hit + (float)vals.L1d_miss)));
    fprintf(results, "  Kickouts        =   %lu\n", vals.L1d_kickouts);
    fprintf(results, "  Dirty kickouts  =   %lu\n", vals.L1d_dirty_kickouts);
    fprintf(results, "  Transfers       =   %lu\n", vals.L1d_transfers);
@@ -622,34 +628,48 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "  Hit Count       =   %lu\n", vals.L2_hit);
    fprintf(results, "  Miss count      =   %lu\n", vals.L2_miss);
    fprintf(results, "  Total Requests  =   %lu\n", (vals.L2_hit + vals.L2_miss));
-   fprintf(results, "  Hit Rate        =   %f\%\n", (float)(vals.L2_hit*100/(vals.L2_hit + vals.L2_miss)));
-   fprintf(results, "  Miss Rate       =   %f\%\n", (float)(vals.L2_miss*100/(vals.L2_hit + vals.L2_miss)));
+   fprintf(results, "  Hit Rate        =   %.1f\%\n", (float)((float)vals.L2_hit*100/((float)vals.L2_hit + (float)vals.L2_miss)));
+   fprintf(results, "  Miss Rate       =   %.1f\%\n", (float)((float)vals.L2_miss*100/((float)vals.L2_hit + (float)vals.L2_miss)));
    fprintf(results, "  Kickouts        =   %lu\n", vals.L2_kickouts);
    fprintf(results, "  Dirty kickouts  =   %lu\n", vals.L2_dirty_kickouts);
    fprintf(results, "  Transfers       =   %lu\n", vals.L2_transfers);
    fprintf(results, "  Flush Kickouts  =   %lu\n\n", vals.flushes);
 
    //Calculate memory cost according to specifications
-   int l1_cost, l2_cost, mem_cost, total_cost;
+   int l1_cost, l2_cost, mem_cost, total_cost, temp;
 
-   if (params.L1.assoc > 1)
-      l1_cost = 100* pow(2,(params.L1.cache_size/4096)-1) + 100*(2*log2(params.L1.assoc));
-   else
-      l1_cost = 100* pow(2,(params.L1.cache_size/4096)-1);
+//   temp = 100* (pow(2,(params.L1.cache_size/4096)-1) *log2(params.L1.assoc)+1);
+//   temp = pow(2,(params.L1.cache_size/4096)-1);
+//   temp = (log2(params.L1.assoc));
+//   temp = 50* pow(2,(params.L2.cache_size/65336));
+//   temp = 50*(log2(params.L2.assoc));
+
+
+//   if (params.L1.assoc > 1)
+      l1_cost = 100* (pow(2,(params.L1.cache_size/4096)-1) *(log2(params.L1.assoc) + 1));
+//   else
+//      l1_cost = 100* pow(2,(params.L1.cache_size/4096)-1);
 
    fprintf(results, "L1 cache cost (Icache $%d) + (Dcache $%d) = $%d\n", l1_cost, l1_cost, 2*l1_cost);
 
-   if (params.L2.assoc > 1)
-      l2_cost = 25* pow(2,(params.L2.cache_size/32768)-1) + 50*(2*log2(params.L2.assoc));
-   else
-      l2_cost = 25* pow(2,(params.L2.cache_size/32768)-1);
+//   if (params.L2.assoc > 1)
+      l2_cost = 50* (pow(2,(params.L2.cache_size/65336)) * (log2(params.L2.assoc) + 1));
+//   else
+//      l2_cost = 25* pow(2,(params.L2.cache_size/32768)-1);
 
    fprintf(results, "L2 cache cost = $%d\n", l2_cost);
-   mem_cost = 50 * (50/params.mmem.ready - 1) + (50/params.mmem.ready - 1)*200 + (16/params.mmem.chunkSize - 1)*100;
+   mem_cost = 75 + (params.mmem.ready/50)*200 + (params.mmem.chunkSize/16)*100;
+
+//   temp = 50 * (50.0/params.mmem.ready);
+//   temp = 50.0/params.mmem.ready;
+//   temp = (params.mmem.ready/50)*200;
+//   temp = (params.mmem.chunkSize/16)*100;
+//   temp =
+
    fprintf(results, "Memory Cost = $%d\n", mem_cost);
    total_cost = mem_cost + 2*l1_cost + l2_cost;
    fprintf(results, "Total cost = $%d\n", total_cost);
-   fprintf(results, "Flushes = %lu : Invalidates = %lu\n\n", vals.flushes, vals.flushes);
+   fprintf(results, "Flushes = %lu : Invalidates = %lu\n\n", vals.flushes, vals.total_kickouts);
    fprintf(results, "----------------------------------------------------------------------------\n\n");
    fprintf(results, "Cache final contents - Index and Tag values are in HEX\n\n");
    fprintf(results, "MemoryLevel: L1i\n");

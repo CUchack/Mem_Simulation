@@ -1,0 +1,10 @@
+#!/bin/bash 
+zcat ../Large\ Traces/bzip2.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-8way -t ../Large\ Traces/bzip2.gz
+
+zcat ../Large\ Traces/bzip2.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-+*2q1w023.6
+6 -t ../Large\ Traces/bzip2.gz
+
+
+zcat ../Large\ Traces/bzip2.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-8way -t ../Large\ Traces/bzip2.gz
+
+/
