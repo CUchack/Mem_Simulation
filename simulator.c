@@ -157,7 +157,7 @@ the next level until it gets to main memory.  It also tracks the statistics
 for the main result printout
 ***************************************************************************/
 void checkCache(cache_sys *caches, mem_params params, traceData trace) {
-   if (vals.instruction_references+vals.number_reads+vals.number_writes%380000 == 0) {
+   if ((vals.instruction_references+vals.number_reads+vals.number_writes)%380000 == 0) {
       flushCaches(&caches->L1_I,&caches->L1_D,&caches->L2,params);
    }
    switch (trace.refType) {
@@ -522,8 +522,8 @@ void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params) {
    for (int i = 0; i < params.L2.numRowsL2; i++) {
       for (int j = 0; j < params.L2.assoc; j++) {
          if (l2->row[i].col[j].valid && l2->row[i].col[j].dirty) {
-            l2->row[idx].col[j].dirty = false;
-            l2->row[idx].col[j].valid = false;
+            l2->row[i].col[j].dirty = false;
+            l2->row[i].col[j].valid = false;
             vals.flushes+=(40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize); // l2 writeback
          }
       }
@@ -575,7 +575,7 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
         percent = 0;
    }
    else {
-        percent = (float)(vals.number_reads*100/(vals.instruction_references + vals.number_reads + vals.number_writes));
+        percent = (float)((float)vals.number_reads*100/(float)(vals.instruction_references + vals.number_reads + vals.number_writes));
    }
    fprintf(results, "  Reads   =             %llu     [%.1f\%]\n", vals.number_reads, percent);
    if((vals.instruction_references + vals.number_reads + vals.number_writes) == 0) {
@@ -589,33 +589,33 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
         percent = 0;
    }
    else {
-        percent = (float)(vals.instruction_references*100/(vals.instruction_references + vals.number_reads + vals.number_writes));
+        percent = (float)((float)vals.instruction_references*100/((float)vals.instruction_references + (float)vals.number_reads + (float)vals.number_writes));
    }
    fprintf(results, "  Inst.   =             %llu     [%.1f\%]\n", vals.instruction_references, percent);
    fprintf(results, "  Total   =             %llu\n\n", (vals.instruction_references + vals.number_reads + vals.number_writes));
    fprintf(results, "Total cycles for activities:  [Percentage]\n");
-   percent = (float)(vals.read_cycles*100/vals.exec_time);
+   percent = (float)((float)vals.read_cycles*100/(float)vals.exec_time);
    fprintf(results, "  Reads   =            %lld     [%.1f\%]\n", vals.read_cycles, percent);
-   percent = (float)(vals.write_cycles*100/vals.exec_time);
+   percent = (float)((float)vals.write_cycles*100/(float)vals.exec_time);
    fprintf(results, "  Writes  =            %lld     [%.1f\%]\n", vals.write_cycles, percent);
-   percent = (float)(vals.instruction_cycles*100/vals.exec_time);
+   percent = (float)((float)vals.instruction_cycles*100/(float)vals.exec_time);
    fprintf(results, "  Inst.   =            %lld     [%.1f\%]\n", vals.instruction_cycles, percent);
    fprintf(results, "  Total   =            %lld\n\n", vals.exec_time);
    fprintf(results, "Average cycles per activity:\n");
    if (vals.number_reads != 0) {
-      fprintf(results, "  Read    =            %.1f\n", (float)(vals.read_cycles/vals.number_reads));
+      fprintf(results, "  Read    =            %.1f\n", (float)((float)vals.read_cycles/(float)vals.number_reads));
    } else
       fprintf(results, "  Read    =            N/A\n");
 
    if (vals.number_writes != 0) {
-      fprintf(results, "  Write   =            %.1f\n", (float)(vals.write_cycles/vals.number_writes));
+      fprintf(results, "  Write   =            %.1f\n", (float)((float)vals.write_cycles/(float)vals.number_writes));
    } else
       fprintf(results, "  Write   =            N/A\n");
    if (vals.instruction_references != 0) {
-      fprintf(results, "  Inst.   =            %.1f\n", (float)(vals.instruction_cycles/vals.instruction_references));
+      fprintf(results, "  Inst.   =            %.1f\n", (float)((float)vals.instruction_cycles/(float)vals.instruction_references));
    } else
       fprintf(results, "  Inst.   =            N/A\n");
-   cpi = (vals.read_cycles+vals.write_cycles+vals.instruction_cycles)/(vals.number_reads+vals.number_writes+vals.instruction_references);
+   cpi = ((float)vals.read_cycles+(float)vals.write_cycles+(float)vals.instruction_cycles)/((float)vals.number_reads+(float)vals.number_writes+(float)vals.instruction_references);
    //Calculate ideal exec time and CPI
    fprintf(results, "Ideal: Exec. Time = %llu;   CPI = %.1f\n", vals.exec_time, cpi);
    //calculate ideal exec time and CPI for mis-aligned access
