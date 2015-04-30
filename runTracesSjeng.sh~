@@ -1,0 +1,24 @@
+#!/bin/bash 
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -t sjeng &
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-small -t sjeng&
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-8way -t sjeng &
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-small -t sjeng
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-8way -t sjeng &
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-small -t sjeng&
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-8way -t sjeng &
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-small -t sjeng
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-8way -t sjeng 
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-small -t sjeng
+
+zcat ../Large\ Traces/sjeng.gz | bin/Debug/./Memory\ Simulator -f config_file-L1-8way -t sjeng &
+
