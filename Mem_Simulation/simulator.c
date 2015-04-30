@@ -68,8 +68,10 @@ void simulate (mem_params params) {
    params.L2.numRowsL2 = params.L2.cache_size/(params.L2.assoc* params.L2.block_size);
    params.L2.numOffsetL2 = floor(log2(params.L2.block_size));
    params.L2.numIndexL2 = floor(log2(params.L2.numRowsL2));
-   tagSize_L1 = ADDR_LEN-params.L1.numIndexL1-params.L1.numOffsetL1;                   //find the number of bits used to represent a tag
-   tagSize_L2 = ADDR_LEN-params.L2.numIndexL2-params.L2.numOffsetL2;                   //find the number of bits used to represent a tag
+   params.L1.numTagsizeL1 = ADDR_LEN-params.L1.numIndexL1-params.L1.numOffsetL1;                   //find the number of bits used to represent a tag
+   params.L2.numTagsizeL2 = ADDR_LEN-params.L2.numIndexL2-params.L2.numOffsetL2;                   //find the number of bits used to represent a tag
+   tagSize_L1 = params.L1.numTagsizeL1;
+   tagSize_L2 = params.L2.numTagsizeL2;
 
 #ifdef DEBUG
    FILE *logfile = fopen(log,"w");
@@ -155,23 +157,26 @@ the next level until it gets to main memory.  It also tracks the statistics
 for the main result printout
 ***************************************************************************/
 void checkCache(cache_sys *caches, mem_params params, traceData trace) {
+   if (vals.instruction_references+vals.number_reads+vals.number_writes%380000 == 0) {
+      flushCaches(&caches->L1_I,&caches->L1_D,&caches->L2,params);
+   }
    switch (trace.refType) {
    case 'I':
-      instReadCache(&caches->L1_I, &caches->L2, trace);
+      instReadCache(&caches->L1_I, &caches->L2, trace, params);
       vals.instruction_references++;
       break;
    case 'R':
-      dataReadCache(&caches->L1_D, &caches->L2, trace);
+      dataReadCache(&caches->L1_D, &caches->L2, trace, params);
       vals.number_reads++;
       break;
    case 'W':
-      dataWriteCache(&caches->L1_D, &caches->L2, trace);
+      dataWriteCache(&caches->L1_D, &caches->L2, trace, params);
       vals.number_writes++;
       break;
    }
 }
 
-void instReadCache(cache_t *l1, cache_t *l2, traceData trace) {
+void instReadCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params) {
    int reqsl1 = (int)ceil((double)trace.numBytes/4);
    if (trace.L1_offset%4 + trace.numBytes > 4*reqsl1) {
       reqsl1++;
@@ -180,11 +185,13 @@ void instReadCache(cache_t *l1, cache_t *l2, traceData trace) {
    if (trace.L2_offset%16 + trace.numBytes > 16*reqsl2) {
       reqsl2++;
    }
+   vals.instruction_cycles+=2; // execution time plus fetch time
    // seach l1 for tag
    for (int i = 0; i < l1->assoc; i++) {
       if ((l1->row[trace.L1_index].col[i].tag == trace.L1_tag) && (l1->row[trace.L1_index].col[i].valid)) {
          // l1 cache hit
          vals.L1i_hit+=reqsl1;
+         vals.instruction_cycles+=reqsl1; // l1 hit
          lruUpdate(l1,trace.L1_index,i);
          return;
       }
@@ -192,12 +199,16 @@ void instReadCache(cache_t *l1, cache_t *l2, traceData trace) {
    // l1 cache miss, check l2
    vals.L1i_miss++;
    vals.L1i_transfers++;
+   vals.instruction_cycles++; // l1 miss
    for (int i = 0; i < l2->assoc; i++) {
       // search l2 for tag
       if ((l2->row[trace.L2_index].col[i].tag == trace.L2_tag) && (l2->row[trace.L2_index].col[i].valid)) {
          // l2 cache hit, find block in l1 to evict
          vals.L2_hit+=reqsl2;
          vals.L1i_hit+=reqsl1-1;
+         vals.instruction_cycles+=5*reqsl2; // L2 hit
+         vals.instruction_cycles+=reqsl1-1; // l1 hit
+         vals.instruction_cycles+=5*params.L1.block_size/params.L2.bus_width;
          lruUpdate(l2,trace.L2_index,i);
          if (l1->row[trace.L1_index].col[0].valid) {
             // l1 valid, l1 kickout required
@@ -209,10 +220,12 @@ void instReadCache(cache_t *l1, cache_t *l2, traceData trace) {
                   if (l2->row[trace.L2_index].col[0].dirty) {
                      // l1,l2 block dirty, l2 dirty kickout required
                      vals.L2_dirty_kickouts++;
+                     //vals.instruction_cycles+=40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize; // l2 write back
                   }
                   vals.L2_kickouts++;
                }
                vals.L1i_dirty_kickouts++;
+               //vals.instruction_cycles+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
                l2->row[trace.L2_index].col[0].tag = l1->row[trace.L1_index].col[0].tag;
             }
             vals.L1i_kickouts++;
@@ -231,17 +244,23 @@ void instReadCache(cache_t *l1, cache_t *l2, traceData trace) {
       // l2 cache miss (l1 valid)
       if(l1->row[trace.L1_index].col[0].dirty) {
          // l2 cache miss (l1 valid and dirty)
-         vals.L1d_dirty_kickouts++;
+         // instant dirty kickout l1 -> l2 -> mem
+         vals.L1i_dirty_kickouts++;
+         vals.L2_dirty_kickouts++;
+         //vals.instruction_cycles+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
+         //vals.instruction_cycles+=40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize; // l2 writeback
+         vals.L2_kickouts++;
       }
-      // instant dirty kickout l1 -> l2 -> mem
-      vals.L1d_kickouts++;
-      vals.L2_dirty_kickouts++;
-      vals.L2_kickouts++;
+      vals.L1i_kickouts++;
    }
    // l2 cache miss
    vals.L2_miss++;
-   vals.L1i_hit+=reqsl1-1;
    vals.L2_transfers++;
+   vals.L1i_hit+=reqsl1-1;
+   vals.instruction_cycles+=7; // l2 miss
+   vals.instruction_cycles+=reqsl1-1; // l1 hit
+   vals.instruction_cycles+=40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize; // l2 write
+   vals.instruction_cycles+=5*params.L1.block_size/params.L2.bus_width; // l1 write
    l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
    l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
    l1->row[trace.L1_index].col[0].dirty = false;
@@ -253,7 +272,7 @@ void instReadCache(cache_t *l1, cache_t *l2, traceData trace) {
    return;
 }
 
-void dataReadCache(cache_t *l1, cache_t *l2, traceData trace) {
+void dataReadCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params) {
    int reqsl1 = (int)ceil((double)trace.numBytes/4);
    if (trace.L1_offset%4 + trace.numBytes > 4*reqsl1) {
       reqsl1++;
@@ -262,11 +281,13 @@ void dataReadCache(cache_t *l1, cache_t *l2, traceData trace) {
    if (trace.L2_offset%16 + trace.numBytes > 16*reqsl2) {
       reqsl2++;
    }
+   vals.read_cycles+=2; // execute + fetch inst.
    // seach l1 for tag
    for (int i = 0; i < l1->assoc; i++) {
       if ((l1->row[trace.L1_index].col[i].tag == trace.L1_tag) && (l1->row[trace.L1_index].col[i].valid)) {
          // l1 cache hit
          vals.L1d_hit+=reqsl1;
+         vals.read_cycles+=reqsl1;
          lruUpdate(l1,trace.L1_index,i);
          return;
       }
@@ -274,12 +295,16 @@ void dataReadCache(cache_t *l1, cache_t *l2, traceData trace) {
    // l1 cache miss, check l2
    vals.L1d_miss++;
    vals.L1d_transfers++;
+   vals.read_cycles++; // l1 miss
    for (int i = 0; i < l2->assoc; i++) {
       // search l2 for tag
       if ((l2->row[trace.L2_index].col[i].tag == trace.L2_tag) && (l2->row[trace.L2_index].col[i].valid)) {
          // l2 cache hit, find block in l1 to evict
          vals.L2_hit+=reqsl2;
          vals.L1d_hit+=reqsl1-1;
+         vals.read_cycles+=5*reqsl2; // L2 hit
+         vals.read_cycles+=reqsl1-1; // l1 hit
+         vals.read_cycles+=5*params.L1.block_size/params.L2.bus_width;
          lruUpdate(l2,trace.L2_index,i);
          if (l1->row[trace.L1_index].col[0].valid) {
             // l1 valid, l1 kickout required
@@ -290,11 +315,13 @@ void dataReadCache(cache_t *l1, cache_t *l2, traceData trace) {
                   // l1 dirty, l2 valid, l2 kickout required
                   if (l2->row[trace.L2_index].col[0].dirty) {
                      // l1,l2 block dirty, l2 dirty kickout required
+                     //vals.read_cycles+=40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize; // l2 write back
                      vals.L2_dirty_kickouts++;
                   }
                   vals.L2_kickouts++;
                }
                vals.L1d_dirty_kickouts++;
+               //vals.read_cycles+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
                l2->row[trace.L2_index].col[0].tag = l1->row[trace.L1_index].col[0].tag;
             }
             vals.L1d_kickouts++;
@@ -315,16 +342,22 @@ void dataReadCache(cache_t *l1, cache_t *l2, traceData trace) {
       if(l1->row[trace.L1_index].col[0].dirty) {
          // l2 cache miss (l1 valid and dirty)
          vals.L1d_dirty_kickouts++;
+         vals.L2_dirty_kickouts++;
+         vals.L2_kickouts++;
+         //vals.read_cycles+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
+         //vals.read_cycles+=40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize; // l2 writeback
       }
       // instant dirty kickout l1 -> l2 -> mem
       vals.L1d_kickouts++;
-      vals.L2_dirty_kickouts++;
-      vals.L2_kickouts++;
    }
    // l2 cache miss
    vals.L2_miss++;
    vals.L1d_hit+=reqsl1-1;
    vals.L2_transfers++;
+   vals.read_cycles+=7; // l2 miss
+   vals.read_cycles+=reqsl1-1; // l1 hit
+   vals.read_cycles+=40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize; // l2 write
+   vals.read_cycles+=5*params.L1.block_size/params.L2.bus_width; // l1 write
    l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
    l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
    l1->row[trace.L1_index].col[0].dirty = false;
@@ -336,7 +369,7 @@ void dataReadCache(cache_t *l1, cache_t *l2, traceData trace) {
    return;
 }
 
-void dataWriteCache(cache_t *l1, cache_t *l2, traceData trace) {
+void dataWriteCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params) {
    int reqsl1 = (int)ceil((double)trace.numBytes/4);
    if (trace.L1_offset%4 + trace.numBytes > 4*reqsl1) {
       reqsl1++;
@@ -345,11 +378,13 @@ void dataWriteCache(cache_t *l1, cache_t *l2, traceData trace) {
    if (trace.L2_offset%16 + trace.numBytes > 16*reqsl2) {
       reqsl2++;
    }
+   vals.write_cycles+=2; // execution time plus fetch time
    // seach l1 for tag
    for (int i = 0; i < l1->assoc; i++) {
       if ((l1->row[trace.L1_index].col[i].tag == trace.L1_tag) && (l1->row[trace.L1_index].col[i].valid)) {
          // l1 cache hit
          vals.L1d_hit+=reqsl1;
+         vals.write_cycles+=reqsl1; // l1 hit
          l1->row[trace.L1_index].col[i].dirty = true;
          lruUpdate(l1,trace.L1_index,i);
          return;
@@ -358,27 +393,33 @@ void dataWriteCache(cache_t *l1, cache_t *l2, traceData trace) {
    // l1 cache miss, check l2
    vals.L1d_miss++;
    vals.L1d_transfers++;
+   vals.write_cycles++; // l1 miss
    for (int i = 0; i < l2->assoc; i++) {
       // search l2 for tag
       if ((l2->row[trace.L2_index].col[i].tag == trace.L2_tag) && (l2->row[trace.L2_index].col[i].valid)) {
          // l2 cache hit, find block in l1 to evict
          vals.L2_hit+=reqsl2;
          vals.L1d_hit+=reqsl1-1;
+         vals.write_cycles+=5*reqsl2; // L2 hit
+         vals.write_cycles+=reqsl1-1; // l1 hit
+         vals.write_cycles+=5*params.L1.block_size/params.L2.bus_width;
          lruUpdate(l2,trace.L2_index,i);
          if (l1->row[trace.L1_index].col[0].valid) {
             // l1 valid, l1 kickout required
             if (l1->row[trace.L1_index].col[0].dirty) {
                // l1 dirty, l2 dirty kickout required
-               l2->row[trace.L2_index].col[0].dirty = true;
+               l2->row[trace.L2_index].col[0].dirty = false;
                if (l2->row[trace.L2_index].col[0].valid) {
                   // l1 dirty, l2 valid, l2 kickout required
                   if (l2->row[trace.L2_index].col[0].dirty) {
                      // l1,l2 block dirty, l2 dirty kickout required
+                     //vals.write_cycles+=40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize; // l2 write back
                      vals.L2_dirty_kickouts++;
                   }
                   vals.L2_kickouts++;
                }
                vals.L1d_dirty_kickouts++;
+               //vals.write_cycles+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
                l2->row[trace.L2_index].col[0].tag = l1->row[trace.L1_index].col[0].tag;
             }
             vals.L1d_kickouts++;
@@ -388,7 +429,7 @@ void dataWriteCache(cache_t *l1, cache_t *l2, traceData trace) {
          l1->row[trace.L1_index].col[0].valid = true;
          l2->row[trace.L2_index].col[0].valid = true;
          l1->row[trace.L1_index].col[0].dirty = true;
-         l2->row[trace.L2_index].col[l2->assoc-1].dirty = true; //lru update puts the hit tag to the back
+         l2->row[trace.L2_index].col[l2->assoc-1].dirty = false; //lru update puts the hit tag to the back
          l2->row[trace.L2_index].col[l2->assoc-1].valid = true;
          return;
       }
@@ -399,16 +440,23 @@ void dataWriteCache(cache_t *l1, cache_t *l2, traceData trace) {
       if(l1->row[trace.L1_index].col[0].dirty) {
          // l2 cache miss (l1 valid and dirty)
          vals.L1d_dirty_kickouts++;
+         vals.L2_dirty_kickouts++;
+         vals.L2_kickouts++;
+         //vals.write_cycles+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
+         //vals.write_cycles+=40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize; // l2 writeback
       }
       // instant dirty kickout l1 -> l2 -> mem
       vals.L1d_kickouts++;
-      vals.L2_dirty_kickouts++;
-      vals.L2_kickouts++;
+
    }
    // l2 cache miss
    vals.L2_miss++;
    vals.L1d_hit+=reqsl1-1;
    vals.L2_transfers++;
+   vals.write_cycles+=7; // l2 miss
+   vals.write_cycles+=reqsl1-1; // l1 hit
+   vals.write_cycles+=40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize; // l2 write
+   vals.write_cycles+=5*params.L1.block_size/params.L2.bus_width; // l1 write
    l1->row[trace.L1_index].col[0].tag = trace.L1_tag;
    l2->row[trace.L2_index].col[0].tag = trace.L2_tag;
    l1->row[trace.L1_index].col[0].dirty = true;
@@ -432,6 +480,49 @@ void lruUpdate(cache_t *cache, unsigned int index, unsigned int col) {
    cache->row[index].col[cache->assoc-1] = curr;
 }
 
+void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params) {
+   vals.flushes++;
+   mem_addr_t addr,tag;
+   unsigned int idx;
+   for (int i = 0; i < params.L1.numRowsL1; i++) {
+      for (int j = 0; j < params.L1.assoc; j++) {
+         if (l1i->row[i].col[j].valid && l1i->row[i].col[j].dirty) {
+            addr = (l1i->row[i].col[j].tag << (64-params.L1.numTagsizeL1)) + (i << params.L1.numOffsetL1);
+            idx = ((addr << (params.L2.numTagsizeL2 + 16)) >> (params.L2.numTagsizeL2 + 16 + params.L2.numOffsetL2));
+            tag = addr >> (params.L2.numOffsetL2 + params.L2.numIndexL2);
+            l2->row[idx].col[0].tag = tag;
+            l2->row[idx].col[0].dirty = true;
+            l1i->row[i].col[j].dirty = false;
+            vals.flushes+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
+            lruUpdate(l2,i,j);
+         }
+      }
+   }
+   for (int i = 0; i < params.L1.numRowsL1; i++) {
+      for (int j = 0; j < params.L1.assoc; j++) {
+         if (l1d->row[i].col[j].valid && l1d->row[i].col[j].dirty) {
+            addr = (l1d->row[i].col[j].tag << (64-params.L1.numTagsizeL1)) + (i << params.L1.numOffsetL1);
+            idx = ((addr << (params.L2.numTagsizeL2 + 16)) >> (params.L2.numTagsizeL2 + 16 + params.L2.numOffsetL2));
+            tag = addr >> (params.L2.numOffsetL2 + params.L2.numIndexL2);
+            l2->row[idx].col[0].tag = tag;
+            l2->row[idx].col[0].dirty = true;
+            l1d->row[i].col[j].dirty = false;
+            vals.flushes+=5*params.L1.block_size/params.L2.bus_width; // l1 write back
+            lruUpdate(l2,i,j);
+         }
+      }
+   }
+   for (int i = 0; i < params.L2.numRowsL2; i++) {
+      for (int j = 0; j < params.L2.assoc; j++) {
+         if (l2->row[i].col[j].valid && l2->row[i].col[j].dirty) {
+            l2->row[idx].col[j].dirty = false;
+            vals.flushes+=(40+params.mmem.chunkTime*params.L2.block_size/params.mmem.chunkSize); // l2 writeback
+         }
+      }
+   }
+
+}
+
 
 /**************************************************************************
 This function prints the simulation results to a file
@@ -439,8 +530,7 @@ This function prints the simulation results to a file
 void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params params) {
    float percent;
    static char res[30];
-   unsigned long exec_time=10;
-   float cpi = 4.9;
+   float cpi = 0;
    strcpy(res,"output.");
    strcat(res, trace_file);
    strcat(res, ".");
@@ -449,9 +539,6 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    FILE *results = fopen(res,"w");
 
    /**** Initialize vals for print testing ******/
-   vals.read_cycles = 100;
-   vals.write_cycles = 100;
-   vals.instruction_cycles = 400;
    vals.exec_time = vals.read_cycles + vals.write_cycles + vals.instruction_cycles;
 
    /*********************************************/
@@ -497,10 +584,12 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
       fprintf(results, "  Inst.   =            %.1f\n", (float)(vals.instruction_cycles/vals.instruction_references));
    } else
       fprintf(results, "  Inst.   =            N/A\n");
+   cpi = (vals.read_cycles+vals.write_cycles+vals.instruction_cycles)/(vals.number_reads+vals.number_writes+vals.instruction_references);
    //Calculate ideal exec time and CPI
-   fprintf(results, "Ideal: Exec. Time = %lu;   CPI = %.1f\n", exec_time, cpi);
+   fprintf(results, "Ideal: Exec. Time = %llu;   CPI = %.1f\n", vals.exec_time, cpi);
    //calculate ideal exec time and CPI for mis-aligned access
-   fprintf(results, "Ideal mis-aligned: Exec. Time = %lu;   CPI = %.1f\n\n", exec_time, cpi);
+
+   fprintf(results, "Ideal mis-aligned: Exec. Time = %llu;   CPI = %.1f\n\n", vals.exec_time, cpi);
 
    fprintf(results, "Memory Level:      L1i\n");
    fprintf(results, "  Hit Count       =   %lu\n", vals.L1i_hit);
@@ -555,7 +644,7 @@ void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params param
    fprintf(results, "Memory Cost = $%d\n", mem_cost);
    total_cost = mem_cost + 2*l1_cost + l2_cost;
    fprintf(results, "Total cost = $%d\n", total_cost);
-   fprintf(results, "Flushes = %lu : Invalidates = %lu\n\n", vals.flushes, vals.total_kickouts);
+   fprintf(results, "Flushes = %lu : Invalidates = %lu\n\n", vals.flushes, vals.flushes);
    fprintf(results, "----------------------------------------------------------------------------\n\n");
    fprintf(results, "Cache final contents - Index and Tag values are in HEX\n\n");
    fprintf(results, "MemoryLevel: L1i\n");

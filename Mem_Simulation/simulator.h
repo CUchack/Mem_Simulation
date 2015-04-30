@@ -24,7 +24,7 @@ typedef struct {
    unsigned int numRowsL1;
    unsigned int numOffsetL1;
    unsigned int numIndexL1;
-
+   unsigned int numTagsizeL1;
 } L1_params;
 
 //A struct that defines the L2 cache parameters
@@ -39,6 +39,7 @@ typedef struct {
    unsigned int numRowsL2;
    unsigned int numOffsetL2;
    unsigned int numIndexL2;
+   unsigned int numTagsizeL2;
 } L2_params;
 
 //A struct to define main memory parameters
@@ -132,14 +133,15 @@ Simulate function.
 ***********************************************************************/
 void simulate(mem_params params);
 void checkCache(cache_sys *caches, mem_params params, traceData trace);
-void instReadCache(cache_t *l1, cache_t *l2, traceData trace);
-void dataReadCache(cache_t *l1, cache_t *l2, traceData trace);
-void dataWriteCache(cache_t *l1, cache_t *l2, traceData trace);
+void instReadCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params);
+void dataReadCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params);
+void dataWriteCache(cache_t *l1, cache_t *l2, traceData trace, mem_params params);
 void lruUpdate(cache_t *cache, unsigned int index, unsigned int col);
 
 void init_sim(mem_params *params);
 
 void printResultsToFile(cache_t *l1i, cache_t *l1d, cache_t *l2,mem_params params);
+void flushCaches(cache_t *l1i, cache_t *l1d, cache_t *l2, mem_params params);
 //unsigned int getIndex(mem_addr_t address, int indexSize, int offset);
 //unsigned long getTag(mem_addr_t address, int tagSize, int offset);
 
