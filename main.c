@@ -73,8 +73,6 @@ int main(int argc, char **argv)
         simulate(Default_params);
     }
     else{
-//        int L1_Cache,L2_cache;
-//        unsigned short L1_assoc, L2_assoc;
         FILE *configfile = fopen(config_file, "r");
         while (fscanf( configfile, "%s %d %hu %d %hu", &Parameters.setName, &Parameters.L1.cache_size, &Parameters.L1.assoc, &Parameters.L2.cache_size, &Parameters.L2.assoc) == 5)
             {
@@ -83,6 +81,5 @@ int main(int argc, char **argv)
         fclose(configfile);
     }
 
-//    printUsage(argv);
     return 0;
 }
